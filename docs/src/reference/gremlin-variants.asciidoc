@@ -97,6 +97,17 @@ connection methods described in the <<connecting-gremlin,Connecting Gremlin>> Se
    <artifactId>gremlin-driver</artifactId>
    <version>x.y.z</version>
 </dependency>
+
+<!--
+alternatively the driver is packaged as an uberjar with shaded dependencies including gremlin-core and
+tinkergraph-gremlin which are not shaded.
+-->
+<dependency>
+   <groupId>org.apache.tinkerpop</groupId>
+   <artifactId>gremlin-driver</artifactId>
+   <version>x.y.z</version>
+   <classifier>all</classifier>
+</dependency>
 ----
 
 [[gremlin-java-connecting]]
