@@ -22,6 +22,7 @@ import org.apache.commons.configuration2.BaseConfiguration;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.tinkerpop.gremlin.process.computer.GraphComputer;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategies;
+import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.MaterializedView;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Element;
 import org.apache.tinkerpop.gremlin.structure.Graph;
@@ -92,6 +93,8 @@ public final class TinkerGraph implements Graph {
     protected AtomicLong currentId = new AtomicLong(-1L);
     protected Map<Object, Vertex> vertices = new ConcurrentHashMap<>();
     protected Map<Object, Edge> edges = new ConcurrentHashMap<>();
+
+    protected Map<String, MaterializedView> materializedViews = new ConcurrentHashMap<>();
 
     protected TinkerGraphVariables variables = null;
     protected TinkerGraphComputerView graphComputerView = null;
@@ -253,6 +256,11 @@ public final class TinkerGraph implements Graph {
     @Override
     public Iterator<Edge> edges(final Object... edgeIds) {
         return createElementIterator(Edge.class, edges, edgeIdManager, edgeIds);
+    }
+
+    @Override
+    public MaterializedView materializedView(String mViewName) {
+        return materializedViews.get(mViewName);
     }
 
     private void loadGraph() {
@@ -523,6 +531,14 @@ public final class TinkerGraph implements Graph {
         } else {
             throw new IllegalArgumentException("Class is not indexable: " + elementClass);
         }
+    }
+
+    public void registerMaterializedView(String mViewName, MaterializedView mView) {
+        materializedViews.put(mViewName, mView);
+    }
+
+    public Set<String> getMaterializedViewKeys() {
+        return materializedViews.keySet();
     }
 
     /**

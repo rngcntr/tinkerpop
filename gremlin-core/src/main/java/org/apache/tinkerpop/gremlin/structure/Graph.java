@@ -24,6 +24,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
+import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.MaterializedView;
 import org.apache.tinkerpop.gremlin.structure.io.GraphReader;
 import org.apache.tinkerpop.gremlin.structure.io.GraphWriter;
 import org.apache.tinkerpop.gremlin.structure.io.Io;
@@ -270,6 +271,12 @@ public interface Graph extends AutoCloseable, Host {
      */
     Iterator<Edge> edges(final Object... edgeIds);
 
+    default void registerMaterializedView(String mViewName, MaterializedView mView) {};
+
+    default MaterializedView materializedView(String mViewName) {
+        throw new UnsupportedOperationException("This Graph does not support materialized views");
+    }
+
     /**
      * Configure and control the transactions for those graphs that support this feature.
      */
@@ -459,6 +466,7 @@ public interface Graph extends AutoCloseable, Host {
             String FEATURE_IO_READ = "IoRead";
             String FEATURE_IO_WRITE = "IoWrite";
             String FEATURE_ORDERABILITY_SEMANTICS = "OrderabilitySemantics";
+            String FEATURE_MATERIALIZED_VIEWS = "MaterializedViews";
 
             /**
              * Determines if the {@code Graph} implementation supports {@link GraphComputer} based processing.
@@ -537,6 +545,14 @@ public interface Graph extends AutoCloseable, Host {
              */
             @FeatureDescriptor(name = FEATURE_ORDERABILITY_SEMANTICS)
             default boolean supportsOrderabilitySemantics() {
+                return true;
+            }
+
+            /**
+             * Determines if the {@code Graph} implementations supports materialized views.
+             */
+            @FeatureDescriptor(name = FEATURE_MATERIALIZED_VIEWS)
+            default boolean supportsMaterializedViews() {
                 return true;
             }
 

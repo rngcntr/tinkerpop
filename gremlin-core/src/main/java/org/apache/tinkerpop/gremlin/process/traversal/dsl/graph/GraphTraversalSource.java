@@ -30,6 +30,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.AddEdgeStartStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.AddVertexStartStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.GraphStep;
+import org.apache.tinkerpop.gremlin.process.traversal.step.map.MaterializedViewStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.IoStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.InjectStep;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.decoration.RequirementsStrategy;
@@ -385,6 +386,20 @@ public class GraphTraversalSource implements TraversalSource {
         clone.bytecode.addStep(GraphTraversal.Symbols.E, ids);
         final GraphTraversal.Admin<Edge, Edge> traversal = new DefaultGraphTraversal<>(clone);
         return traversal.addStep(new GraphStep<>(traversal, Edge.class, true, ids));
+    }
+
+    /**
+     * Spawns a {@link GraphTraversal} starting with all traversers defined by a materialized view.
+     */
+    public GraphTraversal<Edge, Edge> mView(final String mViewName) {
+        if (!graph.features().graph().supportsMaterializedViews()) {
+            throw new UnsupportedOperationException("Graph does not support materialized views");
+        }
+        final GraphTraversalSource clone = this.clone();
+        clone.bytecode.addStep(GraphTraversal.Symbols.mView, mViewName);
+        MaterializedView mView = graph.materializedView(mViewName);
+        final GraphTraversal.Admin<Edge, Edge> traversal = new DefaultGraphTraversal<>(clone);
+        return traversal.addStep(new MaterializedViewStep<>(traversal, mView));
     }
 
     /**
