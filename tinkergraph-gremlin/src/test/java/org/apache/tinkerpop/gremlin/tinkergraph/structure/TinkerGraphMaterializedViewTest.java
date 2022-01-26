@@ -22,6 +22,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.materialized.MaterializedV
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.TinkerFakeMaterializedView;
+import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.TinkerMaterializedView;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -42,19 +43,45 @@ public class TinkerGraphMaterializedViewTest {
     @Test
     public void RegisteredMaterializedViewIsSavedWithName() {
         final TinkerGraph graph = TinkerGraph.open();
-        MaterializedView<Vertex> mView = new TinkerFakeMaterializedView<>("myView", graph.traversal().V());
+        MaterializedView<Vertex,Vertex> mView = new TinkerFakeMaterializedView<>("myView", graph.traversal().V());
         graph.registerMaterializedView(mView);
         assertEquals(mView, graph.materializedView("myView"));
     }
 
     @Test
-    public void RegisteredMaterializedViewIsExecutableWithCorrectResult() {
+    public void FakeMaterializedViewReturnsCorrectResult() {
         final TinkerGraph graph = TinkerGraph.open();
-        MaterializedView<Vertex> mView = new TinkerFakeMaterializedView<>("myView", graph.traversal().V());
+        MaterializedView<Vertex,Vertex> mView = new TinkerFakeMaterializedView<>("myView", graph.traversal().V());
         graph.registerMaterializedView(mView);
         populateExampleGraph(graph);
         long expectedCount = graph.traversal().V().count().next();
         long actualCount = graph.traversal().mView("myView").count().next();
+        Assert.assertEquals(expectedCount, actualCount);
+    }
+
+    @Test
+    public void SimpleMaterializedViewReturnsCorrectResult() {
+        final TinkerGraph graph = TinkerGraph.open();
+        MaterializedView<Vertex,Vertex> mView = new TinkerMaterializedView<>("myView", graph.traversal().V());
+        graph.registerMaterializedView(mView);
+        populateExampleGraph(graph);
+
+        long expectedCount = graph.traversal().V().count().next();
+        long actualCount = graph.traversal().mView("myView").count().next();
+
+        Assert.assertEquals(expectedCount, actualCount);
+    }
+
+    @Test
+    public void CountMaterializedViewReturnsCorrectResult() {
+        final TinkerGraph graph = TinkerGraph.open();
+        MaterializedView<Vertex,Long> mView = new TinkerMaterializedView<>("myView", graph.traversal().V().count());
+        graph.registerMaterializedView(mView);
+        populateExampleGraph(graph);
+
+        long expectedCount = graph.traversal().V().count().next();
+        long actualCount = (long) graph.traversal().mView("myView").next();
+
         Assert.assertEquals(expectedCount, actualCount);
     }
 

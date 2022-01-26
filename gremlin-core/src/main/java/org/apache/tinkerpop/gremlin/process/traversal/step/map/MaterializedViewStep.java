@@ -33,15 +33,15 @@ import java.util.Iterator;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  * @author Pieter Martin
  */
-public class MaterializedViewStep<S> extends AbstractStep<S, S> implements AutoCloseable, Configuring {
+public class MaterializedViewStep<S,E> extends AbstractStep<S, E> implements AutoCloseable, Configuring {
 
     protected Parameters parameters = new Parameters();
-    protected MaterializedView<S> mView;
+    protected MaterializedView<S,E> mView;
     protected boolean done = false;
-    private Iterator<Traverser.Admin<S>> iterator;
+    private Iterator<Traverser.Admin<E>> iterator;
 
 
-    public MaterializedViewStep(final Traversal.Admin<S, S> traversal, MaterializedView<S> mView) {
+    public MaterializedViewStep(final Traversal.Admin<S, S> traversal, MaterializedView<S,E> mView) {
         super(traversal);
         this.mView = mView;
         this.iterator = mView.iterator();
@@ -62,7 +62,7 @@ public class MaterializedViewStep<S> extends AbstractStep<S, S> implements AutoC
     }
 
     @Override
-    protected Traverser.Admin<S> processNextStart() {
+    protected Traverser.Admin<E> processNextStart() {
         return iterator.next();
     }
 

@@ -26,34 +26,28 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public abstract class MaterializedView<S> implements MutationListener {
+public abstract class MaterializedView<S,E> implements MutationListener {
     private final String name;
-    protected final GraphTraversal<S, S> baseTraversal;
-    private final List<Traverser.Admin<S>> results;
+    protected final GraphTraversal<S, E> baseTraversal;
+    private final List<Traverser.Admin<E>> results;
 
-    public MaterializedView(String name, GraphTraversal<S, S> traversal) {
+    public MaterializedView(String name, GraphTraversal<S, E> traversal) {
         this.name = name;
         this.baseTraversal = traversal;
         this.results = new ArrayList<>();
-        initialize();
     }
 
-    protected void recompute() {
-        results.clear();
-        initialize();
-    }
-
-    protected void addResult(Traverser.Admin<S> t) {
+    protected void addResult(Traverser.Admin<E> t) {
         results.add(t);
     }
 
-    protected void removeResult(Traverser.Admin<S> t) {
+    protected void removeResult(Traverser.Admin<E> t) {
         results.remove(t);
     }
 
     protected abstract void initialize();
 
-    public Iterator<Traverser.Admin<S>> iterator() {
+    public Iterator<Traverser.Admin<E>> iterator() {
         return results.iterator();
     }
 

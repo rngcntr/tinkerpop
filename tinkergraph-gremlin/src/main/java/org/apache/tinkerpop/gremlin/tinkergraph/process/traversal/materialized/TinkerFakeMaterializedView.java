@@ -1,5 +1,6 @@
 package org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized;
 
+import org.apache.tinkerpop.gremlin.process.traversal.Traverser;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.materialized.MaterializedView;
 import org.apache.tinkerpop.gremlin.structure.Edge;
@@ -7,10 +8,14 @@ import org.apache.tinkerpop.gremlin.structure.Property;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.VertexProperty;
 
-public class TinkerFakeMaterializedView<S> extends MaterializedView<S> {
+import java.util.ArrayList;
+import java.util.List;
 
-    public TinkerFakeMaterializedView(String name, GraphTraversal<S, S> traversal) {
+public class TinkerFakeMaterializedView<S,E> extends MaterializedView<S,E> {
+
+    public TinkerFakeMaterializedView(String name, GraphTraversal<S, E> traversal) {
         super(name, traversal);
+        initialize();
     }
 
     @Override
@@ -19,6 +24,13 @@ public class TinkerFakeMaterializedView<S> extends MaterializedView<S> {
         while (baseTraversal.hasNext()) {
             addResult(baseTraversal.asAdmin().nextTraverser());
         }
+    }
+
+    private void recompute() {
+        List<Traverser.Admin<E>> results = new ArrayList<>();
+        iterator().forEachRemaining(results::add);
+        results.iterator().forEachRemaining(this::removeResult);
+        initialize();
     }
 
     @Override

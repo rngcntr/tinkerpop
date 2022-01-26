@@ -398,7 +398,7 @@ public class GraphTraversalSource implements TraversalSource {
         }
         final GraphTraversalSource clone = this.clone();
         clone.bytecode.addStep(GraphTraversal.Symbols.mView, mViewName);
-        MaterializedView<?> mView = graph.materializedView(mViewName);
+        MaterializedView<?,?> mView = graph.materializedView(mViewName);
         final GraphTraversal.Admin<S, S> traversal = new DefaultGraphTraversal<>(clone);
         return traversal.addStep(new MaterializedViewStep(traversal, mView));
     }

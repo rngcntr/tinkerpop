@@ -167,7 +167,7 @@ public final class TinkerGraph implements Graph {
     @Override
     public GraphTraversalSource traversal() {
         final EventStrategy.Builder strategyBuilder = EventStrategy.build();
-        for (MaterializedView<?> mv : materializedViews.values()) {
+        for (MaterializedView<?,?> mv : materializedViews.values()) {
             strategyBuilder.addListener(mv);
         }
         return Graph.super.traversal().withStrategies(strategyBuilder.create());
@@ -544,7 +544,7 @@ public final class TinkerGraph implements Graph {
         }
     }
 
-    public <S> void registerMaterializedView(MaterializedView<S> mView) {
+    public <S,E> void registerMaterializedView(MaterializedView<S,E> mView) {
         materializedViews.put(mView.getName(), mView);
     }
 
