@@ -24,7 +24,8 @@ import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
-import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.MaterializedView;
+import org.apache.tinkerpop.gremlin.process.traversal.materialized.Delta;
+import org.apache.tinkerpop.gremlin.process.traversal.materialized.MaterializedView;
 import org.apache.tinkerpop.gremlin.structure.io.GraphReader;
 import org.apache.tinkerpop.gremlin.structure.io.GraphWriter;
 import org.apache.tinkerpop.gremlin.structure.io.Io;
@@ -271,9 +272,11 @@ public interface Graph extends AutoCloseable, Host {
      */
     Iterator<Edge> edges(final Object... edgeIds);
 
-    default void registerMaterializedView(String mViewName, MaterializedView mView) {};
+    default void registerMaterializedView(String mViewName, MaterializedView<?> mView) {};
 
-    default MaterializedView materializedView(String mViewName) {
+    default <E extends Element> void updateMaterializedViews(Delta<E> delta) {};
+
+    default MaterializedView<?> materializedView(String mViewName) {
         throw new UnsupportedOperationException("This Graph does not support materialized views");
     }
 

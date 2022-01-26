@@ -22,7 +22,9 @@ import org.apache.commons.configuration2.BaseConfiguration;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.tinkerpop.gremlin.process.computer.GraphComputer;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategies;
-import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.MaterializedView;
+import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
+import org.apache.tinkerpop.gremlin.process.traversal.materialized.MaterializedView;
+import org.apache.tinkerpop.gremlin.process.traversal.strategy.decoration.EventStrategy;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Element;
 import org.apache.tinkerpop.gremlin.structure.Graph;
@@ -160,6 +162,15 @@ public final class TinkerGraph implements Graph {
      */
     public static TinkerGraph open(final Configuration configuration) {
         return new TinkerGraph(configuration);
+    }
+
+    @Override
+    public GraphTraversalSource traversal() {
+        final EventStrategy.Builder strategyBuilder = EventStrategy.build();
+        for (MaterializedView<?> mv : materializedViews.values()) {
+            strategyBuilder.addListener(mv);
+        }
+        return Graph.super.traversal().withStrategies(strategyBuilder.create());
     }
 
     ////////////// STRUCTURE API METHODS //////////////////
@@ -533,8 +544,8 @@ public final class TinkerGraph implements Graph {
         }
     }
 
-    public void registerMaterializedView(String mViewName, MaterializedView mView) {
-        materializedViews.put(mViewName, mView);
+    public <S> void registerMaterializedView(MaterializedView<S> mView) {
+        materializedViews.put(mView.getName(), mView);
     }
 
     public Set<String> getMaterializedViewKeys() {

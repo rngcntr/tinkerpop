@@ -20,11 +20,10 @@ package org.apache.tinkerpop.gremlin.process.traversal.step.map;
 
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.Traverser;
-import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.MaterializedView;
+import org.apache.tinkerpop.gremlin.process.traversal.materialized.MaterializedView;
 import org.apache.tinkerpop.gremlin.process.traversal.step.Configuring;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.AbstractStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.Parameters;
-import org.apache.tinkerpop.gremlin.structure.Element;
 import org.apache.tinkerpop.gremlin.structure.util.CloseableIterator;
 import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
 
@@ -34,16 +33,15 @@ import java.util.Iterator;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  * @author Pieter Martin
  */
-public class MaterializedViewStep<S, E extends Element> extends AbstractStep<S, E> implements AutoCloseable, Configuring {
+public class MaterializedViewStep<S> extends AbstractStep<S, S> implements AutoCloseable, Configuring {
 
     protected Parameters parameters = new Parameters();
-    protected MaterializedView mView;
+    protected MaterializedView<S> mView;
     protected boolean done = false;
-    private Traverser.Admin<S> head = null;
-    private Iterator<Traverser.Admin<E>> iterator;
+    private Iterator<Traverser.Admin<S>> iterator;
 
 
-    public MaterializedViewStep(final Traversal.Admin traversal, MaterializedView mView) {
+    public MaterializedViewStep(final Traversal.Admin<S, S> traversal, MaterializedView<S> mView) {
         super(traversal);
         this.mView = mView;
         this.iterator = mView.iterator();
@@ -64,14 +62,13 @@ public class MaterializedViewStep<S, E extends Element> extends AbstractStep<S, 
     }
 
     @Override
-    protected Traverser.Admin<E> processNextStart() {
+    protected Traverser.Admin<S> processNextStart() {
         return iterator.next();
     }
 
     @Override
     public void reset() {
         super.reset();
-        this.head = null;
         this.done = false;
         this.iterator = mView.iterator();
     }

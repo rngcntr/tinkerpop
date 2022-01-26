@@ -18,30 +18,50 @@
  */
 package org.apache.tinkerpop.gremlin.tinkergraph.structure;
 
-import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.MaterializedView;
+import org.apache.tinkerpop.gremlin.process.traversal.materialized.MaterializedView;
+import org.apache.tinkerpop.gremlin.structure.Graph;
+import org.apache.tinkerpop.gremlin.structure.Vertex;
+import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.TinkerFakeMaterializedView;
+import org.junit.Assert;
 import org.junit.Test;
-import org.mockito.Mock;
 
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
 
 public class TinkerGraphMaterializedViewTest {
 
     @Test
     public void EmptyGraphShouldHaveNoMaterializedViews() {
-        final TinkerGraph g = TinkerGraph.open();
-        Set<String> mViewKeys = g.getMaterializedViewKeys();
+        final TinkerGraph graph = TinkerGraph.open();
+        Set<String> mViewKeys = graph.getMaterializedViewKeys();
         assertTrue(mViewKeys.isEmpty());
     }
 
     @Test
     public void RegisteredMaterializedViewIsSavedWithName() {
-        final TinkerGraph g = TinkerGraph.open();
-        MaterializedView mView = mock(MaterializedView.class);
-        g.registerMaterializedView("myView", mView);
-        assertEquals(mView, g.materializedView("myView"));
+        final TinkerGraph graph = TinkerGraph.open();
+        MaterializedView<Vertex> mView = new TinkerFakeMaterializedView<>("myView", graph.traversal().V());
+        graph.registerMaterializedView(mView);
+        assertEquals(mView, graph.materializedView("myView"));
+    }
+
+    @Test
+    public void RegisteredMaterializedViewIsExecutableWithCorrectResult() {
+        final TinkerGraph graph = TinkerGraph.open();
+        MaterializedView<Vertex> mView = new TinkerFakeMaterializedView<>("myView", graph.traversal().V());
+        graph.registerMaterializedView(mView);
+        populateExampleGraph(graph);
+        long expectedCount = graph.traversal().V().count().next();
+        long actualCount = graph.traversal().mView("myView").count().next();
+        Assert.assertEquals(expectedCount, actualCount);
+    }
+
+    public void populateExampleGraph(Graph graph) {
+        graph.traversal().addV("person").property("name", "Florian H.").iterate();
+        graph.traversal().addV("person").property("name", "Kadir B.").iterate();
+        graph.traversal().addV("person").property("name", "Phillip K.").iterate();
+        graph.traversal().addV("person").property("name", "Florian G.").iterate();
     }
 }
