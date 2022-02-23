@@ -24,15 +24,12 @@ import org.apache.tinkerpop.gremlin.process.traversal.materialized.MaterializedV
 import org.apache.tinkerpop.gremlin.process.traversal.step.Configuring;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.AbstractStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.Parameters;
+import org.apache.tinkerpop.gremlin.process.traversal.util.FastNoSuchElementException;
 import org.apache.tinkerpop.gremlin.structure.util.CloseableIterator;
 import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
 
 import java.util.Iterator;
 
-/**
- * @author Marko A. Rodriguez (http://markorodriguez.com)
- * @author Pieter Martin
- */
 public class MaterializedViewStep<S,E> extends AbstractStep<S, E> implements AutoCloseable, Configuring {
 
     protected Parameters parameters = new Parameters();
@@ -63,7 +60,11 @@ public class MaterializedViewStep<S,E> extends AbstractStep<S, E> implements Aut
 
     @Override
     protected Traverser.Admin<E> processNextStart() {
-        return iterator.next();
+        if (iterator.hasNext()) {
+            return iterator.next();
+        } else {
+            throw FastNoSuchElementException.instance();
+        }
     }
 
     @Override

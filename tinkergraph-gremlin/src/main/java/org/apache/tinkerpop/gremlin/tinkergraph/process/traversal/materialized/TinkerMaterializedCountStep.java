@@ -4,6 +4,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traverser;
 import org.apache.tinkerpop.gremlin.process.traversal.TraverserGenerator;
 import org.apache.tinkerpop.gremlin.process.traversal.materialized.Delta;
+import org.apache.tinkerpop.gremlin.process.traversal.materialized.MaterializedView;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Property;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
@@ -14,10 +15,12 @@ public class TinkerMaterializedCountStep<T> extends TinkerMaterializedSubStep<T,
     private Traverser.Admin lastOutput;
     final TraverserGenerator generator;
 
-    protected <E, S> TinkerMaterializedCountStep(Step<S,E> originalStep) {
+    protected <E, S> TinkerMaterializedCountStep(MaterializedView mv, Step<T,T> originalStep) {
+        super(mv, originalStep);
         count = 0L;
         generator = originalStep.getTraversal().getTraverserGenerator();
         lastOutput = generator.generate(count, null, 1l);
+        deltaOutput(new Delta<>(Delta.Change.ADD, lastOutput));
     }
 
     @Override

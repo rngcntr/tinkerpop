@@ -29,7 +29,7 @@ import java.util.List;
 public abstract class MaterializedView<S,E> implements MutationListener {
     private final String name;
     protected final GraphTraversal<S, E> baseTraversal;
-    private final List<Traverser.Admin<E>> results;
+    protected final List<Traverser.Admin<E>> results;
 
     public MaterializedView(String name, GraphTraversal<S, E> traversal) {
         this.name = name;
@@ -37,12 +37,12 @@ public abstract class MaterializedView<S,E> implements MutationListener {
         this.results = new ArrayList<>();
     }
 
-    protected void addResult(Traverser.Admin<E> t) {
-        results.add(t);
-    }
-
-    protected void removeResult(Traverser.Admin<E> t) {
-        results.remove(t);
+    public void registerOutputDelta(Delta<Traverser.Admin<E>> inputChange) {
+        if (inputChange.getChange() == Delta.Change.ADD) {
+            results.add(inputChange.getObj());
+        } else {
+            results.remove(inputChange.getObj());
+        }
     }
 
     protected abstract void initialize();

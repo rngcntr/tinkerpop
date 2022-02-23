@@ -1,13 +1,16 @@
 package org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized;
 
+import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.materialized.Delta;
+import org.apache.tinkerpop.gremlin.process.traversal.materialized.MaterializedView;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Property;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.VertexProperty;
 
 public class TinkerMaterializedIdentityStep<T> extends TinkerMaterializedSubStep<T,T> {
-    protected TinkerMaterializedIdentityStep() {
+    protected TinkerMaterializedIdentityStep(MaterializedView mv, Step<T,T> originalStep) {
+        super(mv, originalStep);
     }
 
     @Override

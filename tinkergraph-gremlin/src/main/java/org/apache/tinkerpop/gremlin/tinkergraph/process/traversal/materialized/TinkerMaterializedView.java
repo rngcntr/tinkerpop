@@ -12,7 +12,6 @@ import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.VertexProperty;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 public class TinkerMaterializedView<S,E> extends MaterializedView<S,E> {
@@ -25,22 +24,18 @@ public class TinkerMaterializedView<S,E> extends MaterializedView<S,E> {
         super(name, traversal);
         materializedSteps = new ArrayList<>();
         Step s = traversal.asAdmin().getStartStep();
-        TinkerMaterializedSubStep ms = TinkerMaterializedSubStep.of(s);
+        TinkerMaterializedSubStep ms = TinkerMaterializedSubStep.of(this, s);
         materializedSteps.add(ms);
         materializedStartStep = ms;
         while (s.getNextStep() != null && !(s.getNextStep() instanceof EmptyStep)) {
             s = s.getNextStep();
-            TinkerMaterializedSubStep newMs = TinkerMaterializedSubStep.of(s);
+            TinkerMaterializedSubStep newMs = TinkerMaterializedSubStep.of(this, s);
             newMs.setPreviousStep(ms);
             ms.setNextStep(newMs);
             materializedSteps.add(newMs);
             ms = newMs;
         }
         materializedEndStep = ms;
-    }
-
-    public Iterator<Traverser.Admin<E>> iterator() {
-        return materializedEndStep.outputs();
     }
 
     @Override

@@ -2,6 +2,7 @@ package org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized;
 
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.materialized.Delta;
+import org.apache.tinkerpop.gremlin.process.traversal.materialized.MaterializedView;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.GraphStep;
 import org.apache.tinkerpop.gremlin.structure.*;
 
@@ -9,7 +10,8 @@ public class TinkerMaterializedGraphStep<S, E extends Element> extends TinkerMat
     Class<E> outputType;
     GraphStep<S,E> originalStep;
 
-    protected TinkerMaterializedGraphStep(GraphStep<S,E> originalStep) {
+    protected TinkerMaterializedGraphStep(MaterializedView mv, GraphStep<S,E> originalStep) {
+        super(mv, originalStep);
         this.outputType = originalStep.getReturnClass();
         this.originalStep = originalStep;
     }

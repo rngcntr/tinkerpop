@@ -3,6 +3,7 @@ package org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traverser;
 import org.apache.tinkerpop.gremlin.process.traversal.materialized.Delta;
+import org.apache.tinkerpop.gremlin.process.traversal.materialized.MaterializedView;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.CountGlobalStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.GraphStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.IdentityStep;
@@ -13,24 +14,28 @@ import java.util.Iterator;
 import java.util.List;
 
 public abstract class TinkerMaterializedSubStep<S, E> implements MutationListener {
+    private MaterializedView materializedView;
+    private Step<S,E> originalStep;
     private TinkerMaterializedSubStep<?,S> previousStep;
     private TinkerMaterializedSubStep<E,?> nextStep;
     private final List<Traverser.Admin<E>> outputs;
 
-    public static <S,E> TinkerMaterializedSubStep<S,E> of(Step<S,E> originalStep) {
+    protected TinkerMaterializedSubStep(MaterializedView mv, Step<S,E> originalStep) {
+        this.materializedView = mv;
+        this.originalStep = originalStep;
+        this.outputs = new ArrayList<>();
+    }
+
+    public static <S,E> TinkerMaterializedSubStep<S,E> of(MaterializedView mv, Step<S,E> originalStep) {
         if (originalStep instanceof GraphStep) {
-            return new TinkerMaterializedGraphStep((GraphStep) originalStep);
+            return new TinkerMaterializedGraphStep(mv, (GraphStep) originalStep);
         } else if (originalStep instanceof IdentityStep) {
-            return new TinkerMaterializedIdentityStep();
+            return new TinkerMaterializedIdentityStep(mv, originalStep);
         } else if (originalStep instanceof CountGlobalStep) {
-            return new TinkerMaterializedCountStep(originalStep);
+            return new TinkerMaterializedCountStep(mv, originalStep);
         } else {
             throw new IllegalArgumentException("No such materializable step");
         }
-    }
-
-    protected TinkerMaterializedSubStep() {
-        outputs = new ArrayList<>();
     }
 
     public abstract void registerInputDelta(Delta<Traverser.Admin<S>> inputChange);
@@ -43,6 +48,8 @@ public abstract class TinkerMaterializedSubStep<S, E> implements MutationListene
         }
         if (nextStep != null) {
             nextStep.registerInputDelta(outputDelta);
+        } else if (materializedView != null) {
+            materializedView.registerOutputDelta(outputDelta);
         }
     }
 

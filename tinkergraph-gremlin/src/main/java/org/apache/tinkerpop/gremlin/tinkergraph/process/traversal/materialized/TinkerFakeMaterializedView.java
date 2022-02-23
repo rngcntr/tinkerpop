@@ -2,6 +2,7 @@ package org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized;
 
 import org.apache.tinkerpop.gremlin.process.traversal.Traverser;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
+import org.apache.tinkerpop.gremlin.process.traversal.materialized.Delta;
 import org.apache.tinkerpop.gremlin.process.traversal.materialized.MaterializedView;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Property;
@@ -22,14 +23,14 @@ public class TinkerFakeMaterializedView<S,E> extends MaterializedView<S,E> {
     protected void initialize() {
         baseTraversal.asAdmin().reset();
         while (baseTraversal.hasNext()) {
-            addResult(baseTraversal.asAdmin().nextTraverser());
+            registerOutputDelta(new Delta<>(Delta.Change.ADD, baseTraversal.asAdmin().nextTraverser()));
         }
     }
 
     private void recompute() {
         List<Traverser.Admin<E>> results = new ArrayList<>();
         iterator().forEachRemaining(results::add);
-        results.iterator().forEachRemaining(this::removeResult);
+        results.iterator().forEachRemaining(r -> registerOutputDelta(new Delta<>(Delta.Change.DEL, r)));
         initialize();
     }
 

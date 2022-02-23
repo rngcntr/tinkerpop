@@ -51,44 +51,80 @@ public class TinkerGraphMaterializedViewTest {
     @Test
     public void FakeMaterializedViewReturnsCorrectResult() {
         final TinkerGraph graph = TinkerGraph.open();
-        MaterializedView<Vertex,Vertex> mView = new TinkerFakeMaterializedView<>("myView", graph.traversal().V());
-        graph.registerMaterializedView(mView);
-        populateExampleGraph(graph);
-        long expectedCount = graph.traversal().V().count().next();
-        long actualCount = graph.traversal().mView("myView").count().next();
-        Assert.assertEquals(expectedCount, actualCount);
+        graph.registerMaterializedView(new TinkerFakeMaterializedView<>("myView", graph.traversal().V()));
+
+        for (int i = 0; i < 10; ++i) {
+            graph.traversal().addV("item").property("id", i).iterate();
+
+            long expectedCount = graph.traversal().V().count().next();
+            long actualCount = graph.traversal().mView("myView").count().next();
+
+            Assert.assertEquals(expectedCount, actualCount);
+        }
     }
 
     @Test
     public void SimpleMaterializedViewReturnsCorrectResult() {
         final TinkerGraph graph = TinkerGraph.open();
-        MaterializedView<Vertex,Vertex> mView = new TinkerMaterializedView<>("myView", graph.traversal().V());
-        graph.registerMaterializedView(mView);
-        populateExampleGraph(graph);
+        graph.registerMaterializedView(new TinkerMaterializedView<>("myView", graph.traversal().V()));
 
-        long expectedCount = graph.traversal().V().count().next();
-        long actualCount = graph.traversal().mView("myView").count().next();
+        for (int i = 0; i < 10; ++i) {
+            graph.traversal().addV("item").property("id", i).iterate();
 
-        Assert.assertEquals(expectedCount, actualCount);
+            long expectedCount = graph.traversal().V().count().next();
+            long actualCount = graph.traversal().mView("myView").count().next();
+
+            Assert.assertEquals(expectedCount, actualCount);
+        }
     }
 
     @Test
     public void CountMaterializedViewReturnsCorrectResult() {
         final TinkerGraph graph = TinkerGraph.open();
-        MaterializedView<Vertex,Long> mView = new TinkerMaterializedView<>("myView", graph.traversal().V().count());
-        graph.registerMaterializedView(mView);
-        populateExampleGraph(graph);
+        graph.registerMaterializedView(new TinkerMaterializedView<>("myView", graph.traversal().V().count()));
 
-        long expectedCount = graph.traversal().V().count().next();
-        long actualCount = (long) graph.traversal().mView("myView").next();
+        long insertTime = 0;
+        long queryTime = 0;
 
-        Assert.assertEquals(expectedCount, actualCount);
+        insertTime -= System.nanoTime();
+        for (int i = 0; i < 1_000_000; ++i) {
+            graph.traversal().addV("item").property("id", i).iterate();
+        }
+        insertTime += System.nanoTime();
+
+        long sum = 0;
+        queryTime -= System.nanoTime();
+        for (int i = 0; i < 1_000_000; ++i) {
+            sum += graph.traversal().V().count().next();
+        }
+        queryTime += System.nanoTime();
+        System.out.printf("Insert Time: %.0f ms\n", 1.0 * insertTime / 1_000_000);
+        System.out.printf(" Query Time: %.0f ms\n", 1.0 * queryTime / 1_000_000);
+        Assert.assertEquals(sum, sum + 1 - 1);
     }
 
-    public void populateExampleGraph(Graph graph) {
-        graph.traversal().addV("person").property("name", "Florian H.").iterate();
-        graph.traversal().addV("person").property("name", "Kadir B.").iterate();
-        graph.traversal().addV("person").property("name", "Phillip K.").iterate();
-        graph.traversal().addV("person").property("name", "Florian G.").iterate();
+    @Test
+    public void CountMaterializedViewReturnsCorrectResult2() {
+        final TinkerGraph graph = TinkerGraph.open();
+        graph.registerMaterializedView(new TinkerMaterializedView<>("myView", graph.traversal().V().count()));
+
+        long insertTime = 0;
+        long queryTime = 0;
+
+        insertTime -= System.nanoTime();
+        for (int i = 0; i < 1_000; ++i) {
+            graph.traversal().addV("item").property("id", i).iterate();
+        }
+        insertTime += System.nanoTime();
+        long sum = 0;
+        queryTime -= System.nanoTime();
+        for (int i = 0; i < 1_000; ++i) {
+            sum += (long) graph.traversal().mView("myView").next();
+        }
+        queryTime += System.nanoTime();
+
+        System.out.printf("Insert Time: %.0f ms\n", 1.0 * insertTime / 1_000_000);
+        System.out.printf(" Query Time: %.0f ms\n", 1.0 * queryTime / 1_000_000);
+        Assert.assertEquals(sum, sum + 1 - 1);
     }
 }
