@@ -34,76 +34,73 @@ import org.apache.tinkerpop.gremlin.structure.VertexProperty;
 public interface MutationListener {
 
     /**
-     * Raised when a new {@link Vertex} is added.
+     * Raised after a {@link Vertex} was added to the graph.
      *
      * @param vertex the {@link Vertex} that was added
      */
     public void vertexAdded(final Vertex vertex);
 
     /**
-     * Raised after a {@link Vertex} was removed from the graph.
+     * Raised before a {@link Vertex} is removed from the graph.
      *
-     * @param vertex the {@link Vertex} that was removed
+     * @param vertex the {@link Vertex} that will be removed.
      */
     public void vertexRemoved(final Vertex vertex);
 
     /**
-     * Raised after the property of a {@link Vertex} changed.
+     * Raised after a {@link VertexProperty} was added to a {@link Vertex}.
      *
-     * @param element  the {@link Vertex} that changed
-     * @param setValue the new value of the property
+     * @param vertexProperty the {@link VertexProperty} that was added.
      */
-    public void vertexPropertyChanged(final Vertex element, final VertexProperty oldValue, final Object setValue, final Object... vertexPropertyKeyValues);
+    public void vertexPropertyAdded(final VertexProperty<?> vertexProperty);
 
     /**
-     * Raised after a {@link VertexProperty} was removed from the graph.
+     * Raised before a {@link VertexProperty} is removed from a {@link Vertex}.
      *
-     * @param vertexProperty the {@link VertexProperty} that was removed
+     * @param vertexProperty the {@link VertexProperty} that will be removed.
      */
-    public void vertexPropertyRemoved(final VertexProperty vertexProperty);
+    public void vertexPropertyRemoved(final VertexProperty<?> vertexProperty);
 
     /**
-     * Raised after a new {@link Edge} is added.
+     * Raised after an {@link Edge} was added to the graph.
      *
-     * @param edge the {@link Edge} that was added
+     * @param edge the {@link Edge} that was added.
      */
     public void edgeAdded(final Edge edge);
 
     /**
-     * Raised after an {@link Edge} was removed from the graph.
+     * Raised before an {@link Edge} is removed from the graph.
      *
-     * @param edge  the {@link Edge} that was removed.
+     * @param edge  the {@link Edge} that will be removed.
      */
     public void edgeRemoved(final Edge edge);
 
     /**
-     * Raised after the property of a {@link Edge} changed.
+     * Raised after a {@link Property} was added to an {@link Edge}.
      *
-     * @param element  the {@link Edge} that changed
-     * @param setValue the new value of the property
+     * @param edgeProperty the {@link Property} that was added.
      */
-    public void edgePropertyChanged(final Edge element, final Property oldValue, final Object setValue);
+    public void edgePropertyAdded(Property<?> edgeProperty);
 
     /**
-     * Raised after an {@link Property} property was removed from an {@link Edge}.
+     * Raised before a {@link Property} is removed from an {@link Edge}.
      *
-     * @param property  the {@link Property} that was removed
+     * @param property the {@link Property} that will be removed.
      */
-    public void edgePropertyRemoved(final Edge element, final Property property);
+    public void edgePropertyRemoved(final Property<?> property);
 
     /**
-     * Raised after the property of a {@link VertexProperty} changed.
+     * Raised after the a {@link Property} was added to a {@link VertexProperty}.
      *
-     * @param element  the {@link VertexProperty} that changed
-     * @param setValue the new value of the property
+     * @param vertexPropertyProperty the {@link Property} that was added.
      */
-    public void vertexPropertyPropertyChanged(final VertexProperty element, final Property oldValue, final Object setValue);
+    public void vertexPropertyPropertyAdded(Property<?> vertexPropertyProperty);
 
     /**
-     * Raised after an {@link Property} property was removed from a {@link VertexProperty}.
+     * Raised before a {@link Property} is removed from a {@link VertexProperty}.
      *
-     * @param property  the {@link Property} that removed
+     * @param vertexPropertyProperty the {@link Property} that will be removed
      */
-    public void vertexPropertyPropertyRemoved(final VertexProperty element, final Property property);
+    public void vertexPropertyPropertyRemoved(final Property<?> vertexPropertyProperty);
 }
 

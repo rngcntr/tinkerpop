@@ -19,14 +19,10 @@
 package org.apache.tinkerpop.gremlin.process.traversal.step.util.event;
 
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
-import org.apache.tinkerpop.gremlin.structure.Edge;
-import org.apache.tinkerpop.gremlin.structure.Element;
-import org.apache.tinkerpop.gremlin.structure.Graph;
-import org.apache.tinkerpop.gremlin.structure.Property;
-import org.apache.tinkerpop.gremlin.structure.Vertex;
-import org.apache.tinkerpop.gremlin.structure.VertexProperty;
+import org.apache.tinkerpop.gremlin.structure.*;
 
 import java.util.Iterator;
+import java.util.function.BiConsumer;
 
 /**
  * A representation of some action that occurs on a {@link Graph} for a {@link Traversal}.
@@ -38,215 +34,114 @@ public interface Event {
     /**
      * An {@code Event} publishes its action to all the event {@link MutationListener} objects.
      */
+
     void fireEvent(final Iterator<MutationListener> eventListeners);
 
     /**
-     * Represents an action where an {@link Edge} is added to the {@link Graph}.
+     * Template for the implementation of events.
      */
-    class EdgeAddedEvent implements Event {
+    abstract class AbstractEvent<E> implements Event {
+        protected final E element;
+        private final BiConsumer<MutationListener, E> eventCall;
 
-        private final Edge edge;
-
-        public EdgeAddedEvent(final Edge edge) {
-            this.edge = edge;
+        public AbstractEvent(final E element, final BiConsumer<MutationListener, E> eventCall) {
+            this.element = element;
+            this.eventCall = eventCall;
         }
 
         @Override
         public void fireEvent(final Iterator<MutationListener> eventListeners) {
-            while (eventListeners.hasNext()) {
-                eventListeners.next().edgeAdded(edge);
-            }
+            eventListeners.forEachRemaining(listener -> eventCall.accept(listener, element));
         }
     }
 
     /**
-     * Represents an action where an {@link Edge} {@link Property} is added/modified.  If the {@link Property} is
-     * new then the {@code oldValue} will be {@code null}.
+     * Represents an action where an {@link Edge} is added to the {@link Graph}.
      */
-    class EdgePropertyChangedEvent extends ElementPropertyChangedEvent {
-
-        public EdgePropertyChangedEvent(final Edge edge, final Property oldValue, final Object newValue) {
-            super(edge, oldValue, newValue);
-        }
-
-        @Override
-        void fire(final MutationListener listener, final Element element, final Property oldValue, final Object newValue, final Object... vertexPropertyKeyValues) {
-            listener.edgePropertyChanged((Edge) element, oldValue, newValue);
-        }
-    }
-
-    /**
-     * Represents an action where an {@link Edge} {@link Property} is removed.
-     */
-    class EdgePropertyRemovedEvent extends ElementPropertyEvent {
-
-        public EdgePropertyRemovedEvent(final Edge element, final Property removed) {
-            super(element, removed, null);
-        }
-
-        @Override
-        void fire(final MutationListener listener, final Element element, final Property oldValue, final Object newValue, final Object... vertexPropertyKeyValues) {
-            listener.edgePropertyRemoved((Edge) element, oldValue);
+    class EdgeAddedEvent extends AbstractEvent<Edge> {
+        public EdgeAddedEvent(final Edge edge) {
+            super(edge, MutationListener::edgeAdded);
         }
     }
 
     /**
      * Represents an action where an {@link Edge} is removed from the {@link Graph}.
      */
-    class EdgeRemovedEvent implements Event {
-
-        private final Edge edge;
-
+    class EdgeRemovedEvent extends AbstractEvent<Edge> {
         public EdgeRemovedEvent(final Edge edge) {
-            this.edge = edge;
-        }
-
-        @Override
-        public void fireEvent(final Iterator<MutationListener> eventListeners) {
-            while (eventListeners.hasNext()) {
-                eventListeners.next().edgeRemoved(edge);
-            }
+            super(edge, MutationListener::edgeRemoved);
         }
     }
 
     /**
      * Represents an action where a {@link Vertex} is added to the {@link Graph}.
      */
-    class VertexAddedEvent implements Event {
-
-        private final Vertex vertex;
-
+    class VertexAddedEvent extends AbstractEvent<Vertex> {
         public VertexAddedEvent(final Vertex vertex) {
-            this.vertex = vertex;
-        }
-
-        @Override
-        public void fireEvent(final Iterator<MutationListener> eventListeners) {
-            while (eventListeners.hasNext()) {
-                eventListeners.next().vertexAdded(vertex);
-            }
-        }
-    }
-
-    /**
-     * Represents an action where a {@link VertexProperty} is modified on a {@link Vertex}. If the {@link Property} is
-     * new then the {@code oldValue} will be {@code null}.
-     */
-    class VertexPropertyChangedEvent extends ElementPropertyChangedEvent {
-
-        public VertexPropertyChangedEvent(final Vertex element, final Property oldValue, final Object newValue, final Object... vertexPropertyKeyValues) {
-            super(element, oldValue, newValue, vertexPropertyKeyValues);
-        }
-
-        @Override
-        void fire(final MutationListener listener, final Element element, final Property oldValue, final Object newValue, final Object... vertexPropertyKeyValues) {
-            listener.vertexPropertyChanged((Vertex) element, (VertexProperty) oldValue, newValue, vertexPropertyKeyValues);
-        }
-    }
-
-    /**
-     * Represents an action where a {@link Property} is modified on a {@link VertexProperty}. If the {@link Property} is
-     * new then the {@code oldValue} will be {@code null}.
-     */
-    class VertexPropertyPropertyChangedEvent extends ElementPropertyChangedEvent {
-
-        public VertexPropertyPropertyChangedEvent(final VertexProperty element, final Property oldValue, final Object newValue) {
-            super(element, oldValue, newValue);
-        }
-
-        @Override
-        void fire(final MutationListener listener, final Element element, final Property oldValue, final Object newValue, final Object... vertexPropertyKeyValues) {
-            listener.vertexPropertyPropertyChanged((VertexProperty) element, oldValue, newValue);
-        }
-    }
-
-    /**
-     * Represents an action where a {@link Property} is removed from a {@link VertexProperty}.
-     */
-    class VertexPropertyPropertyRemovedEvent extends ElementPropertyEvent {
-
-        public VertexPropertyPropertyRemovedEvent(final VertexProperty element, final Property removed) {
-            super(element, removed, null);
-        }
-
-        @Override
-        void fire(final MutationListener listener, final Element element, final Property oldValue, final Object newValue, final Object... vertexPropertyKeyValues) {
-            listener.vertexPropertyPropertyRemoved((VertexProperty) element, oldValue);
-        }
-    }
-
-    /**
-     * Represents an action where a {@link Property} is removed from a {@link Vertex}.
-     */
-    class VertexPropertyRemovedEvent implements Event {
-
-        private final VertexProperty vertexProperty;
-
-        public VertexPropertyRemovedEvent(final VertexProperty vertexProperty) {
-            this.vertexProperty = vertexProperty;
-        }
-
-        @Override
-        public void fireEvent(final Iterator<MutationListener> eventListeners) {
-            while (eventListeners.hasNext()) {
-                eventListeners.next().vertexPropertyRemoved(vertexProperty);
-            }
+            super(vertex, MutationListener::vertexAdded);
         }
     }
 
     /**
      * Represents an action where a {@link Vertex} is removed from the {@link Graph}.
      */
-    class VertexRemovedEvent implements Event {
-
-        private final Vertex vertex;
-
+    class VertexRemovedEvent extends AbstractEvent<Vertex> {
         public VertexRemovedEvent(final Vertex vertex) {
-            this.vertex = vertex;
-        }
-
-        @Override
-        public void fireEvent(final Iterator<MutationListener> eventListeners) {
-            while (eventListeners.hasNext()) {
-                eventListeners.next().vertexRemoved(vertex);
-            }
+            super(vertex, MutationListener::vertexRemoved);
         }
     }
 
     /**
-     * A base class for {@link Property} mutation events.
+     * Represents an action where a {@link VertexProperty} is added to a {@link Vertex}.
      */
-    abstract class ElementPropertyChangedEvent extends ElementPropertyEvent {
-
-        public ElementPropertyChangedEvent(final Element element, final Property oldValue, final Object newValue, final Object... vertexPropertyKeyValues) {
-            super(element, oldValue, newValue, vertexPropertyKeyValues);
+    class VertexPropertyAddedEvent extends AbstractEvent<VertexProperty<?>> {
+        public VertexPropertyAddedEvent(final VertexProperty<?> vertexProperty) {
+            super(vertexProperty, MutationListener::vertexPropertyAdded);
         }
     }
 
     /**
-     * A base class for {@link Property} mutation events.
+     * Represents an action where a {@link VertexProperty} is removed from a {@link Vertex}.
      */
-    abstract class ElementPropertyEvent implements Event {
-
-        private final Element element;
-        private final Property oldValue;
-        private final Object newValue;
-        private final Object[] vertexPropertyKeyValues;
-
-        public ElementPropertyEvent(final Element element, final Property oldValue, final Object newValue, final Object... vertexPropertyKeyValues) {
-            this.element = element;
-            this.oldValue = oldValue;
-            this.newValue = newValue;
-            this.vertexPropertyKeyValues = vertexPropertyKeyValues;
+    class VertexPropertyRemovedEvent extends AbstractEvent<VertexProperty<?>> {
+        public VertexPropertyRemovedEvent(final VertexProperty<?> vertexProperty) {
+            super(vertexProperty, MutationListener::vertexPropertyRemoved);
         }
+    }
 
-        abstract void fire(final MutationListener listener, final Element element, final Property oldValue, final Object newValue, final Object... vertexPropertyKeyValues);
+    /**
+     * Represents an action where a {@link Property} is added to an {@link Edge}.
+     */
+    class EdgePropertyAddedEvent extends AbstractEvent<Property<?>> {
+        public EdgePropertyAddedEvent(final Property<?> edgeProperty) {
+            super(edgeProperty, MutationListener::edgePropertyAdded);
+        }
+    }
 
-        @Override
-        public void fireEvent(final Iterator<MutationListener> eventListeners) {
-            while (eventListeners.hasNext()) {
-                fire(eventListeners.next(), element, oldValue, newValue, vertexPropertyKeyValues);
-            }
+    /**
+     * Represents an action where a {@link Property} is removed from an {@link Edge}.
+     */
+    class EdgePropertyRemovedEvent extends AbstractEvent<Property<?>> {
+        public EdgePropertyRemovedEvent(final Property<?> edgeProperty) {
+            super(edgeProperty, MutationListener::edgePropertyRemoved);
+        }
+    }
+
+    /**
+     * Represents an action where a {@link Property} is added to a {@link VertexProperty}.
+     */
+    class VertexPropertyPropertyAddedEvent extends AbstractEvent<Property<?>> {
+        public VertexPropertyPropertyAddedEvent(final Property<?> vertexPropertyProperty) {
+            super(vertexPropertyProperty, MutationListener::vertexPropertyPropertyAdded);
+        }
+    }
+
+    /**
+     * Represents an action where a {@link Property} is removed from a {@link VertexProperty}.
+     */
+    class VertexPropertyPropertyRemovedEvent extends AbstractEvent<Property<?>> {
+        public VertexPropertyPropertyRemovedEvent(final Property<?> vertexPropertyProperty) {
+            super(vertexPropertyProperty, MutationListener::vertexPropertyPropertyRemoved);
         }
     }
 }

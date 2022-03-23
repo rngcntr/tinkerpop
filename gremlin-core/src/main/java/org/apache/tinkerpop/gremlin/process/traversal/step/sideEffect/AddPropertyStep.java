@@ -45,16 +45,17 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 
 /**
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class AddPropertyStep<S extends Element> extends SideEffectStep<S>
-        implements Mutating<Event.ElementPropertyChangedEvent>, TraversalParent, Scoping {
+        implements Mutating<Event>, TraversalParent, Scoping {
 
     private Parameters parameters = new Parameters();
     private final VertexProperty.Cardinality cardinality;
-    private CallbackRegistry<Event.ElementPropertyChangedEvent> callbackRegistry;
+    private CallbackRegistry<Event> callbackRegistry;
 
     public AddPropertyStep(final Traversal.Admin traversal, final VertexProperty.Cardinality cardinality, final Object keyObject, final Object valueObject) {
         super(traversal);
@@ -117,16 +118,15 @@ public class AddPropertyStep<S extends Element> extends SideEffectStep<S>
                 && optEventStrategy.isPresent();
         final EventStrategy es = optEventStrategy.orElse(null);
 
-        // find property to remove
-        Property removedProperty = VertexProperty.empty();
-
         // only need to capture the removedProperty if eventing is configured
         if (eventingIsConfigured) {
+            Property<?> removedProperty = VertexProperty.empty();
+
             if (element instanceof Vertex) {
                 if (cardinality == VertexProperty.Cardinality.set) {
-                    final Iterator<? extends Property> properties = element.properties(key);
+                    final Iterator<? extends Property<?>> properties = element.properties(key);
                     while (properties.hasNext()) {
-                        final Property property = properties.next();
+                        final Property<?> property = properties.next();
                         if (Objects.equals(property.value(), value)) {
                             removedProperty = property;
                             break;
@@ -139,45 +139,52 @@ public class AddPropertyStep<S extends Element> extends SideEffectStep<S>
                 removedProperty = element.property(key);
             }
 
-            // detach removed property
             if (removedProperty.isPresent()) {
-                removedProperty = es.detach(removedProperty);
-            } else {
-                removedProperty = element instanceof Vertex ? new KeyedVertexProperty(key) : new KeyedProperty(key);
+                triggerEvents(element, removedProperty, es, true);
             }
         }
+
+        Property<?> updatedProperty = null;
 
         // update property
         if (element instanceof Vertex) {
             if (null != this.cardinality) {
-                ((Vertex) element).property(this.cardinality, key, value, vertexPropertyKeyValues);
+                updatedProperty = ((Vertex) element).property(this.cardinality, key, value, vertexPropertyKeyValues);
             } else if (vertexPropertyKeyValues.length > 0) {
-                ((Vertex) element).property(key, value, vertexPropertyKeyValues);
+                updatedProperty = ((Vertex) element).property(key, value, vertexPropertyKeyValues);
             } else {
-                ((Vertex) element).property(key, value);
+                updatedProperty = ((Vertex) element).property(key, value);
             }
         } else if (element instanceof Edge) {
-            element.property(key, value);
+            updatedProperty = element.property(key, value);
         } else if (element instanceof VertexProperty) {
-            element.property(key, value);
+            updatedProperty = element.property(key, value);
         }
 
-        // trigger event callbacks
         if (eventingIsConfigured) {
-            final Event.ElementPropertyChangedEvent event;
-            if (element instanceof Vertex) {
-                event = new Event.VertexPropertyChangedEvent(es.detach((Vertex) element), removedProperty, value, vertexPropertyKeyValues);
-            } else if (element instanceof Edge) {
-                event = new Event.EdgePropertyChangedEvent(es.detach((Edge) element), removedProperty, value);
-            } else if (element instanceof VertexProperty) {
-                event = new Event.VertexPropertyPropertyChangedEvent(es.detach((VertexProperty) element), removedProperty, value);
-            } else {
-                throw new IllegalStateException(String.format("The incoming object cannot be processed by change eventing in %s:  %s", AddPropertyStep.class.getName(), element));
-            }
-            for (EventCallback<Event.ElementPropertyChangedEvent> c : this.callbackRegistry.getCallbacks()) {
-                c.accept(event);
-            }
+            triggerEvents(element, updatedProperty, es, false);
         }
+    }
+
+    private void triggerEvents(Element element, Property<?> property, EventStrategy es, boolean removed) {
+        final Event event;
+        if (element instanceof Vertex) {
+            event = removed
+                    ? new Event.VertexPropertyRemovedEvent(es.detach((VertexProperty<?>) property))
+                    : new Event.VertexPropertyAddedEvent(es.detach((VertexProperty<?>) property));
+        } else if (element instanceof Edge) {
+            event = removed
+                    ? new Event.EdgePropertyRemovedEvent(es.detach(property))
+                    : new Event.EdgePropertyAddedEvent(es.detach(property));
+        } else if (element instanceof VertexProperty) {
+            event = removed
+                    ? new Event.VertexPropertyPropertyRemovedEvent(es.detach(property))
+                    : new Event.VertexPropertyPropertyAddedEvent(es.detach(property));
+        } else {
+            throw new IllegalStateException(String.format("The incoming object cannot be processed by change eventing in %s:  %s",
+                    AddPropertyStep.class.getName(), element));
+        }
+        this.callbackRegistry.getCallbacks().forEach(c -> c.accept(event));
     }
 
     @Override
@@ -186,7 +193,7 @@ public class AddPropertyStep<S extends Element> extends SideEffectStep<S>
     }
 
     @Override
-    public CallbackRegistry<Event.ElementPropertyChangedEvent> getMutatingCallbackRegistry() {
+    public CallbackRegistry<Event> getMutatingCallbackRegistry() {
         if (null == this.callbackRegistry) this.callbackRegistry = new ListCallbackRegistry<>();
         return this.callbackRegistry;
     }

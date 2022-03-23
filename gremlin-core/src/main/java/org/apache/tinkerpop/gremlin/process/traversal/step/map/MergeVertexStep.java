@@ -231,17 +231,21 @@ public class MergeVertexStep<S> extends FlatMapStep<S, Vertex> implements Mutati
                 onMatchMap.forEach((key, value) -> {
                     // trigger callbacks for eventing - in this case, it's a VertexPropertyChangedEvent. if there's no
                     // registry/callbacks then just set the property
-                    if (this.callbackRegistry != null && !callbackRegistry.getCallbacks().isEmpty()) {
-                        final EventStrategy eventStrategy = getTraversal().getStrategies().getStrategy(EventStrategy.class).get();
-                        final Property<?> p = v.property(key);
-                        final Property<Object> oldValue = p.isPresent() ? eventStrategy.detach(v.property(key)) : null;
-                        final Event.VertexPropertyChangedEvent vpce = new Event.VertexPropertyChangedEvent(eventStrategy.detach(v), oldValue, value);
-                        this.callbackRegistry.getCallbacks().forEach(c -> c.accept(vpce));
+                    final VertexProperty<?> removedProperty = v.property(key);
+                    final EventStrategy eventStrategy = getTraversal().getStrategies().getStrategy(EventStrategy.class).get();
+
+                    if (this.callbackRegistry != null && !callbackRegistry.getCallbacks().isEmpty() && removedProperty.isPresent()) {
+                        Event evt = new Event.VertexPropertyRemovedEvent(eventStrategy.detach(removedProperty));
+                        this.callbackRegistry.getCallbacks().forEach(c -> c.accept(evt));
                     }
 
-                    // try to detect proper cardinality for the key according to the graph
                     final Graph graph = this.getTraversal().getGraph().get();
-                    v.property(graph.features().vertex().getCardinality(key), key, value);
+                    final VertexProperty<?> addedProperty = v.property(graph.features().vertex().getCardinality(key), key, value);
+
+                    if (this.callbackRegistry != null && !callbackRegistry.getCallbacks().isEmpty()) {
+                        Event evt = new Event.VertexPropertyAddedEvent(eventStrategy.detach(addedProperty));
+                        this.callbackRegistry.getCallbacks().forEach(c -> c.accept(evt));
+                    }
                 });
             }
 

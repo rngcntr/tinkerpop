@@ -63,28 +63,28 @@ public class ConsoleMutationListener implements MutationListener {
     }
 
     @Override
-    public void edgePropertyRemoved(final Edge element, final Property removedValue) {
-        System.out.println("Edge [" + element.toString() + "] property with value of [" + removedValue + "] removed in graph [" + graph.toString() + "]");
+    public void edgePropertyRemoved(final Property removedValue) {
+        System.out.println("Edge [" + removedValue.element().toString() + "] property with value of [" + removedValue + "] removed from graph [" + graph.toString() + "]");
     }
 
     @Override
-    public void edgePropertyChanged(final Edge element, final Property oldValue, final Object setValue) {
-        System.out.println("Edge [" + element.toString() + "] property change value from [" + oldValue + "] to [" + setValue + "] in graph [" + graph.toString() + "]");
+    public void edgePropertyAdded(final Property addedValue) {
+        System.out.println("Edge [" + addedValue.element().toString() + "] property with value of [" + addedValue + "] added to graph [" + graph.toString() + "]");
     }
 
     @Override
-    public void vertexPropertyPropertyChanged(final VertexProperty element, final Property oldValue, final Object setValue) {
-        System.out.println("VertexProperty [" + element.toString() + "] property change value from [" + oldValue + "] to [" + setValue + "] in graph [" + graph.toString() + "]");
+    public void vertexPropertyPropertyAdded(final Property addedValue) {
+        System.out.println("VertexProperty [" + addedValue.element().toString() + "] property with value of [" + addedValue + "] added to graph [" + graph.toString() + "]");
     }
 
     @Override
-    public void vertexPropertyPropertyRemoved(final VertexProperty element, final Property oldValue) {
-        System.out.println("VertexProperty [" + element.toString() + "] property with value of [" + oldValue + "] removed in graph [" + graph.toString() + "]");
+    public void vertexPropertyPropertyRemoved(final Property removedValue) {
+        System.out.println("VertexProperty [" + removedValue.element().toString() + "] property with value of [" + removedValue + "] removed in graph [" + graph.toString() + "]");
     }
 
     @Override
-    public void vertexPropertyChanged(final Vertex element, final VertexProperty oldValue, final Object setValue, final Object... vertexPropertyKeyValues) {
-        System.out.println("Vertex [" + element.toString() + "] property [" + oldValue + "] change to [" + setValue + "] in graph [" + graph.toString() + "]");
+    public void vertexPropertyAdded(final VertexProperty addedValue) {
+        System.out.println("Vertex [" + addedValue.element().toString() + "] property with value of[" + addedValue + "] added to graph [" + graph.toString() + "]");
     }
 
     @Override

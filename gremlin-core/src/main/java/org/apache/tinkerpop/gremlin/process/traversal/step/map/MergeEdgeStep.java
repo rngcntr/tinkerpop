@@ -279,14 +279,20 @@ public class MergeEdgeStep<S> extends FlatMapStep<S, Edge> implements Mutating<E
                 onMatchMap.forEach((key, value) -> {
                     // trigger callbacks for eventing - in this case, it's a EdgePropertyChangedEvent. if there's no
                     // registry/callbacks then just set the property
-                    if (this.callbackRegistry != null && !callbackRegistry.getCallbacks().isEmpty()) {
-                        final EventStrategy eventStrategy = getTraversal().getStrategies().getStrategy(EventStrategy.class).get();
-                        final Property<?> p = e.property(key);
-                        final Property<Object> oldValue = p.isPresent() ? eventStrategy.detach(e.property(key)) : null;
-                        final Event.EdgePropertyChangedEvent vpce = new Event.EdgePropertyChangedEvent(eventStrategy.detach(e), oldValue, value);
-                        this.callbackRegistry.getCallbacks().forEach(c -> c.accept(vpce));
+                    final Property<?> removedProperty = e.property(key);
+                    final EventStrategy eventStrategy = getTraversal().getStrategies().getStrategy(EventStrategy.class).get();
+
+                    if (this.callbackRegistry != null && !callbackRegistry.getCallbacks().isEmpty() && removedProperty.isPresent()) {
+                        Event evt = new Event.EdgePropertyRemovedEvent(eventStrategy.detach(removedProperty));
+                        this.callbackRegistry.getCallbacks().forEach(c -> c.accept(evt));
                     }
-                    e.property(key, value);
+
+                    final Property<Object> addedProperty = e.property(key, value);
+
+                    if (this.callbackRegistry != null && !callbackRegistry.getCallbacks().isEmpty()) {
+                        Event evt = new Event.EdgePropertyAddedEvent(eventStrategy.detach(addedProperty));
+                        this.callbackRegistry.getCallbacks().forEach(c -> c.accept(evt));
+                    }
                 });
             }
 

@@ -70,11 +70,11 @@ public class DropStep<S> extends FilterStep<S> implements Mutating<Event> {
             final Property toRemove = (Property) s;
             if (callbackRegistry != null && !callbackRegistry.getCallbacks().isEmpty()) {
                 final EventStrategy eventStrategy = getTraversal().getStrategies().getStrategy(EventStrategy.class).get();
-                final Event.ElementPropertyEvent removeEvent;
+                final Event removeEvent;
                 if (toRemove.element() instanceof Edge)
-                    removeEvent = new Event.EdgePropertyRemovedEvent(eventStrategy.detach((Edge) toRemove.element()), eventStrategy.detach(toRemove));
+                    removeEvent = new Event.EdgePropertyRemovedEvent(eventStrategy.detach(toRemove));
                 else if (toRemove.element() instanceof VertexProperty)
-                    removeEvent = new Event.VertexPropertyPropertyRemovedEvent(eventStrategy.detach((VertexProperty) toRemove.element()), eventStrategy.detach(toRemove));
+                    removeEvent = new Event.VertexPropertyPropertyRemovedEvent(eventStrategy.detach(toRemove));
                 else
                     throw new IllegalStateException("The incoming object is not removable: " + s);
 
