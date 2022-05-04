@@ -52,7 +52,7 @@ public abstract class MaterializedSubStep<S,E> {
     protected MaterializedSubStep(AbstractMaterializedView<?,?> mv, Step<S,E> originalStep) {
         this.materializedView = mv;
         this.originalStep = originalStep;
-        this.graph = originalStep.getTraversal().getGraph().get();
+        this.graph = Util.getGraph(originalStep);
         this.clonedStep = originalStep.clone();
         this.clonedStep.setPreviousStep(FakeEmptyStep.of(originalStep.getPreviousStep()));
         this.clonedStep.setNextStep(FakeEmptyStep.of(originalStep.getNextStep()));

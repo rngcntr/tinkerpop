@@ -263,6 +263,16 @@ public class TraversalCorrectnessTests {
         testTraversal(g -> g.V().not(__.identity().none()));
     }
 
+    @Test
+    public void V_WhereHasKeyValue() {
+        testTraversal(g -> g.V().where(__.identity().has("name", "josh")));
+    }
+
+    @Test
+    public void V_NotHasKeyValue() {
+        testTraversal(g -> g.V().not(__.identity().has("name", "josh")));
+    }
+
     private void testTraversal(Function<GraphTraversalSource, GraphTraversal<?, ?>> ts) {
         GraphTraversal<?, ?> t = ts.apply(graph.traversal());
         AbstractMaterializedView<?, ?> mView = new MaterializedView<>("myView", t.asAdmin().clone());

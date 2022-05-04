@@ -21,20 +21,23 @@ package org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.Traverser;
-import org.apache.tinkerpop.gremlin.process.traversal.TraverserGenerator;
 import org.apache.tinkerpop.gremlin.process.traversal.step.TraversalParent;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.FilterStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.NotStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.TraversalFilterStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.EmptyStep;
-import org.apache.tinkerpop.gremlin.process.traversal.traverser.TraverserRequirement;
-import org.apache.tinkerpop.gremlin.process.traversal.traverser.util.DefaultTraverserGeneratorFactory;
+import org.apache.tinkerpop.gremlin.structure.Edge;
+import org.apache.tinkerpop.gremlin.structure.Property;
+import org.apache.tinkerpop.gremlin.structure.Vertex;
+import org.apache.tinkerpop.gremlin.structure.VertexProperty;
 import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.AbstractMaterializedView;
 import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.Delta;
 import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.HashMultiSet;
 import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.step.util.MaterializedSubStep;
 
 import java.util.*;
+
+import static org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.Util.stepIterator;
 
 public class MaterializedLocalFilterStep<S> extends MaterializedSubStep<S,S> {
 
@@ -84,6 +87,31 @@ public class MaterializedLocalFilterStep<S> extends MaterializedSubStep<S,S> {
     @Override
     public void initialize() {
         localSteps.forEach(MaterializedSubStep::initialize);
+    }
+
+    @Override
+    public void vertexChanged(Delta<Vertex> delta) {
+        stepIterator(localSteps, delta.getChange()).forEachRemaining(s -> s.vertexChanged(delta));
+    }
+
+    @Override
+    public void edgeChanged(Delta<Edge> delta) {
+        stepIterator(localSteps, delta.getChange()).forEachRemaining(s -> s.edgeChanged(delta));
+    }
+
+    @Override
+    public void vertexPropertyChanged(Delta<VertexProperty<?>> delta) {
+        stepIterator(localSteps, delta.getChange()).forEachRemaining(s -> s.vertexPropertyChanged(delta));
+    }
+
+    @Override
+    public void edgePropertyChanged(Delta<Property<?>> delta) {
+        stepIterator(localSteps, delta.getChange()).forEachRemaining(s -> s.edgePropertyChanged(delta));
+    }
+
+    @Override
+    public void vertexPropertyPropertyChanged(Delta<Property<?>> delta) {
+        stepIterator(localSteps, delta.getChange()).forEachRemaining(s -> s.vertexPropertyPropertyChanged(delta));
     }
 
     @Override
