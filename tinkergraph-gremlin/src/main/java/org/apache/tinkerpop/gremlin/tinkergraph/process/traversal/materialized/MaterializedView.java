@@ -22,10 +22,13 @@ import org.apache.commons.collections.iterators.ReverseListIterator;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.EmptyStep;
+import org.apache.tinkerpop.gremlin.process.traversal.traverser.TraverserRequirement;
 import org.apache.tinkerpop.gremlin.structure.*;
 import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.step.util.MaterializedSubStep;
+import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.step.util.TraverserRequirementStep;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -53,6 +56,9 @@ public class MaterializedView<S,E> extends AbstractMaterializedView<S,E> {
             ms = newMs;
         }
         materializedEndStep = ms;
+
+        TraverserRequirementStep trs = new TraverserRequirementStep(traversal, Collections.singleton(TraverserRequirement.SACK));
+        traversal.addStep(trs);
         initialize();
     }
 

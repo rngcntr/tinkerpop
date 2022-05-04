@@ -46,6 +46,10 @@ public class Delta<T> {
         return new Delta<>(this.c, map.apply(this.obj));
     }
 
+    public Delta<T> invert() {
+        return new Delta<>(this.c == Change.ADD ? Change.DEL : Change.ADD, this.obj);
+    }
+
     public Change getChange() {
         return c;
     }

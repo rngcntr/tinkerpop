@@ -22,6 +22,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.AnonymousTraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
+import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
@@ -240,6 +241,26 @@ public class TraversalCorrectnessTests {
     @Test
     public void V_As_Out_Select() {
         testTraversal(g -> g.V().as("a").out().select("a"));
+    }
+
+    @Test
+    public void V_WhereIdentity() {
+        testTraversal(g -> g.V().where(__.identity()));
+    }
+
+    @Test
+    public void V_WhereNone() {
+        testTraversal(g -> g.V().where(__.identity().none()));
+    }
+
+    @Test
+    public void V_NotIdentity() {
+        testTraversal(g -> g.V().not(__.identity()));
+    }
+
+    @Test
+    public void V_NotNone() {
+        testTraversal(g -> g.V().not(__.identity().none()));
     }
 
     private void testTraversal(Function<GraphTraversalSource, GraphTraversal<?, ?>> ts) {

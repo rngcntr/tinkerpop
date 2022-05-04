@@ -1,0 +1,135 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.step.local;
+
+import org.apache.tinkerpop.gremlin.process.traversal.Step;
+import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
+import org.apache.tinkerpop.gremlin.process.traversal.Traverser;
+import org.apache.tinkerpop.gremlin.process.traversal.TraverserGenerator;
+import org.apache.tinkerpop.gremlin.process.traversal.step.TraversalParent;
+import org.apache.tinkerpop.gremlin.process.traversal.step.filter.FilterStep;
+import org.apache.tinkerpop.gremlin.process.traversal.step.filter.NotStep;
+import org.apache.tinkerpop.gremlin.process.traversal.step.filter.TraversalFilterStep;
+import org.apache.tinkerpop.gremlin.process.traversal.step.util.EmptyStep;
+import org.apache.tinkerpop.gremlin.process.traversal.traverser.TraverserRequirement;
+import org.apache.tinkerpop.gremlin.process.traversal.traverser.util.DefaultTraverserGeneratorFactory;
+import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.AbstractMaterializedView;
+import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.Delta;
+import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.HashMultiSet;
+import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.step.util.MaterializedSubStep;
+
+import java.util.*;
+
+public class MaterializedLocalFilterStep<S> extends MaterializedSubStep<S,S> {
+
+    private HashMultiSet<Traverser.Admin<S>> localResultSet;
+    private List<MaterializedSubStep<?,?>> localSteps;
+    private MaterializedSubStep localStartStep;
+
+    private static final List<Class<? extends FilterStep>> SUPPORTED_STEPS = Arrays.asList(
+            NotStep.class, TraversalFilterStep.class
+    );
+
+    private final boolean inverseFilter;
+
+    public MaterializedLocalFilterStep(AbstractMaterializedView<?, ?> mv, Step<S, S> originalStep) {
+        super(mv, originalStep);
+        // TODO: neither parent nor child traversal must not contain steps which use or drop sack
+        if (!supports(originalStep) || !(originalStep instanceof TraversalParent)) {
+            throw new IllegalArgumentException("Step is not compatible: " + originalStep);
+        }
+        final List<Traversal.Admin<Object, Object>> localChildren = ((TraversalParent) originalStep).getLocalChildren();
+        if (localChildren.size() != 1) {
+            throw new IllegalArgumentException("Step is not compatible: " + originalStep);
+        }
+        inverseFilter = originalStep instanceof NotStep;
+        buildLocalTraversal(localChildren.get(0));
+        localResultSet = new HashMultiSet<>();
+    }
+
+    private void buildLocalTraversal(Traversal.Admin<?,?> localTraversal) {
+        localSteps = new ArrayList<>();
+        Step<?,?> s = localTraversal.getStartStep();
+        MaterializedSubStep<?,?> ms = MaterializedSubStep.of(materializedView, s);
+        localSteps.add(ms);
+        localStartStep = ms;
+        while (s.getNextStep() != null && !(s.getNextStep() instanceof EmptyStep)) {
+            s = s.getNextStep();
+            MaterializedSubStep newMs = MaterializedSubStep.of(materializedView, s);
+            newMs.setPreviousStep(ms);
+            ms.setNextStep(newMs);
+            localSteps.add(newMs);
+            ms = newMs;
+        }
+        ms.addOutputListener(this::registerLocalDelta);
+        initialize();
+    }
+
+    @Override
+    public void initialize() {
+        localSteps.forEach(MaterializedSubStep::initialize);
+    }
+
+    @Override
+    public void registerInputDelta(Delta<Traverser.Admin<S>> inputChange) {
+        Traverser.Admin<S> original = inputChange.getObj();
+        Traverser.Admin<S> clone = (Traverser.Admin<S>) original.clone();
+        if (inverseFilter) {
+            /*
+                for not(...) traversals, the result is added to the set by default and gets removed by
+                the registerLocalDelta method
+            */
+            if (inputChange.getChange() == Delta.Change.ADD) {
+                localResultSet.add(original);
+            } else {
+                localResultSet.remove(original);
+            }
+        }
+        localStartStep.registerInputDelta(inputChange.map(t -> {
+            clone.sack(original);
+            return clone;
+        }));
+    }
+
+    public <T> void registerLocalDelta(Delta<Traverser.Admin<T>> inputChange) {
+        Traverser.Admin<S> sack = inputChange.getObj().sack();
+
+        if (inverseFilter) {
+            if (inputChange.getChange() == Delta.Change.ADD && !localResultSet.contains(sack)) {
+                localResultSet.remove(sack);
+                deltaOutput(inputChange.invert().map(t -> sack));
+            } else if (inputChange.getChange() == Delta.Change.DEL && localResultSet.contains(sack)) {
+                localResultSet.add(sack);
+                deltaOutput(inputChange.invert().map(t -> sack));
+            }
+        } else {
+            if (inputChange.getChange() == Delta.Change.ADD && !localResultSet.contains(sack)) {
+                localResultSet.add(sack);
+                deltaOutput(inputChange.map(t -> sack));
+            } else if (inputChange.getChange() == Delta.Change.DEL && localResultSet.contains(sack)) {
+                localResultSet.remove(sack);
+                deltaOutput(inputChange.map(t -> sack));
+            }
+        }
+    }
+
+    public static boolean supports(Step<?,?> step) {
+        return SUPPORTED_STEPS.contains(step.getClass());
+    }
+}

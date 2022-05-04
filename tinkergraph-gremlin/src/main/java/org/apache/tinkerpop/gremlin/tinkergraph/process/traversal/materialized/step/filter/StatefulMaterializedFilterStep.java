@@ -33,7 +33,7 @@ import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.s
 
 import java.util.*;
 
-public class StatefulMaterializedFilterStep <S> extends MaterializedSubStep<S,S> {
+public class StatefulMaterializedFilterStep<S> extends MaterializedSubStep<S,S> {
 
     private HashMultiMap<Traverser.Admin<S>, Boolean> matchMap;
 

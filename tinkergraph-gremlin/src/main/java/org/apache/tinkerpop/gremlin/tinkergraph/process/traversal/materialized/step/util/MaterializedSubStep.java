@@ -21,6 +21,7 @@ package org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traverser;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.*;
+import org.apache.tinkerpop.gremlin.process.traversal.step.util.EmptyStep;
 import org.apache.tinkerpop.gremlin.structure.*;
 import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.AbstractMaterializedView;
 import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.Delta;
@@ -31,19 +32,22 @@ import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.s
 import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.step.flatMap.MaterializedPropertiesStep;
 import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.step.flatMap.MaterializedVertexStep;
 import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.step.flatMap.StatefulMaterializedFlatMapStep;
+import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.step.local.MaterializedLocalFilterStep;
 import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.step.map.StatelessMaterializedMapStep;
 import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.step.reduce.*;
 
 import java.util.*;
+import java.util.function.Consumer;
 
 public abstract class MaterializedSubStep<S,E> {
-    AbstractMaterializedView<?,?> materializedView;
+    protected AbstractMaterializedView<?,?> materializedView;
     protected final Graph graph;
     protected final Step<S,E> clonedStep;
     protected final Step<S,E> originalStep;
     protected MaterializedSubStep<?,S> previousStep;
     protected MaterializedSubStep<E,?> nextStep;
     protected final List<Traverser.Admin<E>> outputs;
+    private final List<Consumer<Delta<Traverser.Admin<E>>>> outputListeners;
 
     protected MaterializedSubStep(AbstractMaterializedView<?,?> mv, Step<S,E> originalStep) {
         this.materializedView = mv;
@@ -54,6 +58,7 @@ public abstract class MaterializedSubStep<S,E> {
         this.clonedStep.setNextStep(FakeEmptyStep.of(originalStep.getNextStep()));
         this.clonedStep.setTraversal(originalStep.getTraversal());
         this.outputs = new ArrayList<>();
+        this.outputListeners = new ArrayList<>();
     }
 
     public static <S,E> MaterializedSubStep<S,E> of(AbstractMaterializedView mv, Step<S,E> originalStep) {
@@ -65,6 +70,8 @@ public abstract class MaterializedSubStep<S,E> {
             return new StatefulMaterializedFilterStep(mv, originalStep);
         } else if (StatefulMaterializedFlatMapStep.supports(originalStep)) {
             return new StatefulMaterializedFlatMapStep(mv, originalStep);
+        } else if (MaterializedLocalFilterStep.supports(originalStep)) {
+            return new MaterializedLocalFilterStep(mv, originalStep);
         } else if (originalStep instanceof GraphStep) {
             return new MaterializedGraphStep(mv, (GraphStep) originalStep);
         } else if (originalStep instanceof VertexStep) {
@@ -99,11 +106,18 @@ public abstract class MaterializedSubStep<S,E> {
             final Traverser.Admin<E> deltaT = outputDelta.getObj();
             Util.removeFirst(outputs, t -> t.equals(deltaT));
         }
+
         if (nextStep != null) {
             nextStep.registerInputDelta(outputDelta);
-        } else if (materializedView != null) {
+        } else if (originalStep.getTraversal().getParent() == EmptyStep.instance() && materializedView != null) {
             materializedView.registerOutputDelta((Delta) outputDelta);
         }
+
+        outputListeners.forEach(l -> l.accept(outputDelta));
+    }
+
+    public void addOutputListener(Consumer<Delta<Traverser.Admin<E>>> listener) {
+        outputListeners.add(listener);
     }
 
     public Iterator<Traverser.Admin<E>> outputs() {
