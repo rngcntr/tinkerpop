@@ -48,6 +48,6 @@ public class MaterializedMeanStep<T extends Number> extends MaterializedReducing
         }
         long bulk = inputChange.getObj().bulk();
         return (state.isPresent() ? state : Optional.of(new MeanGlobalStep.MeanNumber())).map(mn ->
-                mn.add(inputChange.getObj().get(), inputChange.getChange() == Delta.Change.ADD ? bulk : -1 * bulk));
+                mn.add(inputChange.getObj().get(), inputChange.isAddition() ? bulk : -1 * bulk));
     }
 }

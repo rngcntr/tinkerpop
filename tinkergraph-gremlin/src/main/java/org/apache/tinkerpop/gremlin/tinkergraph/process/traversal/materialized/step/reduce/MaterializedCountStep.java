@@ -44,6 +44,6 @@ public class MaterializedCountStep<S> extends MaterializedReducingBarrierStep<S,
     @Override
     protected Optional<Long> apply(Optional<Long> state, Delta<Traverser.Admin<S>> inputChange) {
         final long bulk = inputChange.getObj().bulk();
-        return state.map(s -> s + (inputChange.getChange() == Delta.Change.ADD ? bulk : -1 * bulk));
+        return state.map(s -> s + (inputChange.isAddition() ? bulk : -1 * bulk));
     }
 }

@@ -40,7 +40,7 @@ public class MaterializedVertexStep<E extends Element> extends MaterializedFlatM
 
     @Override
     public void registerInputDelta(Delta<Traverser.Admin<Vertex>> inputChange) {
-        if (inputChange.getChange() == Delta.Change.DEL) {
+        if (inputChange.isDeletion()) {
             return; // deletions of vertices will also cause deletions of edges which we can detect in elementChanged
         }
         final Traverser.Admin<Vertex> t = inputChange.getObj();

@@ -36,7 +36,7 @@ public class MaterializedPropertiesStep<E> extends MaterializedSubStep<Element,E
 
     @Override
     public void registerInputDelta(Delta<Traverser.Admin<Element>> inputChange) {
-        if (inputChange.getChange() == Delta.Change.DEL) {
+        if (inputChange.isDeletion()) {
             return; // deletions of vertices will also cause deletions of properties which we can detect in elementChanged
         }
         final Traverser.Admin<Element> t = inputChange.getObj();

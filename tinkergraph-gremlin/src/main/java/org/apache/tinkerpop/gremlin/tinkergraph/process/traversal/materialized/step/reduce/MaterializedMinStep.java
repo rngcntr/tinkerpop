@@ -49,7 +49,7 @@ public class MaterializedMinStep<T extends Comparable<T>> extends MaterializedRe
         T obj = inputChange.getObj().get();
         if (state.isPresent()) {
             T s = state.get();
-            if (inputChange.getChange() == Delta.Change.ADD) {
+            if (inputChange.isAddition()) {
                 return Optional.of(Util.min(s, obj));
             } else {
                 if (s.compareTo(obj) < 0) {
@@ -60,7 +60,7 @@ public class MaterializedMinStep<T extends Comparable<T>> extends MaterializedRe
                 }
             }
         } else {
-            if (inputChange.getChange() == Delta.Change.ADD) {
+            if (inputChange.isAddition()) {
                 return Optional.of(obj);
             } else {
                 return state;

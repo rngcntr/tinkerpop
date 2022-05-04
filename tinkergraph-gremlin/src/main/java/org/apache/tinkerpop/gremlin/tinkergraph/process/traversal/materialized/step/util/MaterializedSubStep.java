@@ -100,7 +100,7 @@ public abstract class MaterializedSubStep<S,E> {
     public abstract void registerInputDelta(Delta<Traverser.Admin<S>> inputChange);
 
     protected void deltaOutput(Delta<Traverser.Admin<E>> outputDelta) {
-        if (outputDelta.getChange() == Delta.Change.ADD) {
+        if (outputDelta.isAddition()) {
             outputs.add(outputDelta.getObj());
         } else {
             final Traverser.Admin<E> deltaT = outputDelta.getObj();

@@ -38,7 +38,7 @@ public abstract class AbstractMaterializedView<S,E> implements MutationListener 
     }
 
     public void registerOutputDelta(Delta<Traverser.Admin<E>> inputChange) {
-        if (inputChange.getChange() == Delta.Change.ADD) {
+        if (inputChange.isAddition()) {
             results.add(inputChange.getObj());
         } else {
             Util.removeFirst(results, t -> t.equals(inputChange.getObj()));

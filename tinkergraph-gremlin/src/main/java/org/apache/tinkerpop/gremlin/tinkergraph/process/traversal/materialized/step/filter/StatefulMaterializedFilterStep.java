@@ -55,7 +55,7 @@ public class StatefulMaterializedFilterStep<S> extends MaterializedSubStep<S,S> 
         S elem = t.get();
         if (elem instanceof Element) {
             boolean matchDetected = matchesElement(t);
-            if (inputChange.getChange() == Delta.Change.ADD) {
+            if (inputChange.isAddition()) {
                 matchMap.put(t, matchDetected);
             } else {
                 matchMap.remove(t);

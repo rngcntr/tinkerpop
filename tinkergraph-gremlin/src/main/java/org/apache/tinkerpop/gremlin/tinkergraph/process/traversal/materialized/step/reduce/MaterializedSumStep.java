@@ -49,7 +49,7 @@ public class MaterializedSumStep<T extends Number> extends MaterializedReducingB
             return Optional.empty();
         }
         Number changeValue = NumberHelper.mul(inputChange.getObj().get(), inputChange.getObj().bulk());
-        Number signedChangeValue = NumberHelper.mul(changeValue, inputChange.getChange() == Delta.Change.ADD ? 1 : -1);
+        Number signedChangeValue = NumberHelper.mul(changeValue, inputChange.isAddition() ? 1 : -1);
         return (state.isPresent() ? state : getSeed()).map(s -> (T) NumberHelper.add(s, signedChangeValue));
     }
 }

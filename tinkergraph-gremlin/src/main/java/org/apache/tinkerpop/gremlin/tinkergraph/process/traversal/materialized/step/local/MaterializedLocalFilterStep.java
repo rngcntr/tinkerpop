@@ -89,18 +89,28 @@ public class MaterializedLocalFilterStep<S> extends MaterializedSubStep<S,S> {
     @Override
     public void registerInputDelta(Delta<Traverser.Admin<S>> inputChange) {
         Traverser.Admin<S> original = inputChange.getObj();
-        Traverser.Admin<S> clone = (Traverser.Admin<S>) original.clone();
         if (inverseFilter) {
             /*
                 for not(...) traversals, the result is added to the set by default and gets removed by
                 the registerLocalDelta method
             */
-            if (inputChange.getChange() == Delta.Change.ADD) {
+            if (inputChange.isAddition()) {
                 localResultSet.add(original);
-            } else {
+                deltaOutput(inputChange);
+                processLocal(inputChange);
+            } else if (localResultSet.contains(original)){
+                processLocal(inputChange);
                 localResultSet.remove(original);
+                deltaOutput(inputChange);
             }
+        } else {
+            processLocal(inputChange);
         }
+    }
+
+    private void processLocal(Delta<Traverser.Admin<S>> inputChange) {
+        Traverser.Admin<S> original = inputChange.getObj();
+        Traverser.Admin<S> clone = (Traverser.Admin<S>) original.clone();
         localStartStep.registerInputDelta(inputChange.map(t -> {
             clone.sack(original);
             return clone;
@@ -111,18 +121,18 @@ public class MaterializedLocalFilterStep<S> extends MaterializedSubStep<S,S> {
         Traverser.Admin<S> sack = inputChange.getObj().sack();
 
         if (inverseFilter) {
-            if (inputChange.getChange() == Delta.Change.ADD && !localResultSet.contains(sack)) {
+            if (inputChange.isAddition() && localResultSet.contains(sack)) {
                 localResultSet.remove(sack);
                 deltaOutput(inputChange.invert().map(t -> sack));
-            } else if (inputChange.getChange() == Delta.Change.DEL && localResultSet.contains(sack)) {
+            } else if (inputChange.isDeletion() && !localResultSet.contains(sack)) {
                 localResultSet.add(sack);
                 deltaOutput(inputChange.invert().map(t -> sack));
             }
         } else {
-            if (inputChange.getChange() == Delta.Change.ADD && !localResultSet.contains(sack)) {
+            if (inputChange.isAddition() && !localResultSet.contains(sack)) {
                 localResultSet.add(sack);
                 deltaOutput(inputChange.map(t -> sack));
-            } else if (inputChange.getChange() == Delta.Change.DEL && localResultSet.contains(sack)) {
+            } else if (inputChange.isDeletion() && localResultSet.contains(sack)) {
                 localResultSet.remove(sack);
                 deltaOutput(inputChange.map(t -> sack));
             }

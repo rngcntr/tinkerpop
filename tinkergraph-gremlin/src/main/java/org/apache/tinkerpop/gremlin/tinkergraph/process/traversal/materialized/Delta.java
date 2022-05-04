@@ -23,7 +23,11 @@ import java.util.function.Function;
 public class Delta<T> {
 
     public enum Change {
-        ADD, DEL
+        ADD, DEL;
+
+        public Change invert() {
+            return this == ADD ? DEL : ADD;
+        }
     }
 
     private final Change c;
@@ -47,7 +51,15 @@ public class Delta<T> {
     }
 
     public Delta<T> invert() {
-        return new Delta<>(this.c == Change.ADD ? Change.DEL : Change.ADD, this.obj);
+        return new Delta<>(this.c.invert(), this.obj);
+    }
+
+    public boolean isAddition() {
+        return this.c == Change.ADD;
+    }
+
+    public boolean isDeletion() {
+        return this.c == Change.DEL;
     }
 
     public Change getChange() {

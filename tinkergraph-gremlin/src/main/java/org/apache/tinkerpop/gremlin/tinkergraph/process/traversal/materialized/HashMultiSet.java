@@ -69,11 +69,7 @@ public class HashMultiSet<K> implements Set<K> {
         if (cnt != null && cnt != 1) {
             countMap.put((K) o, cnt - 1);
             return true;
-        } else if (cnt == 1) {
-            return true;
-        } else {
-            return false;
-        }
+        } else return cnt != null;
     }
 
     @Override
