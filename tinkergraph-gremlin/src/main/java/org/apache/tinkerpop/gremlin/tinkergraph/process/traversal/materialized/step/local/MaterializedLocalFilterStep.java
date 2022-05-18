@@ -117,20 +117,12 @@ public class MaterializedLocalFilterStep<S> extends MaterializedSubStep<S,S> {
 
     @Override
     public void registerInputDelta(Delta<Traverser.Admin<S>> inputChange) {
-        Traverser.Admin<S> original = inputChange.getObj();
         if (inverseFilter) {
-            /*
-                for not(...) traversals, the result is added to the set by default and gets removed by
-                the registerLocalDelta method
-                TODO: Not yet determined if this works with multiple deletions and additions
-            */
             if (inputChange.isAddition()) {
-                localResultSet.add(original);
                 deltaOutput(inputChange);
                 processLocal(inputChange);
-            } else if (localResultSet.contains(original)){
+            } else {
                 processLocal(inputChange);
-                localResultSet.remove(original);
                 deltaOutput(inputChange);
             }
         } else {
@@ -156,7 +148,7 @@ public class MaterializedLocalFilterStep<S> extends MaterializedSubStep<S,S> {
 
         boolean foundBefore = localResultSet.contains(sack);
 
-        if (inverseFilter && inputChange.isDeletion() || !inverseFilter && inputChange.isAddition()) {
+        if (inputChange.isAddition()) {
             localResultSet.add(sack);
         } else {
             localResultSet.remove(sack);
