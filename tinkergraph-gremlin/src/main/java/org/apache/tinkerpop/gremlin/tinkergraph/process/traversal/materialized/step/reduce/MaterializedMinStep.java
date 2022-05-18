@@ -23,7 +23,6 @@ import org.apache.tinkerpop.gremlin.process.traversal.step.map.MinGlobalStep;
 import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.AbstractMaterializedView;
 import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.Delta;
 import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.Util;
-import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.step.reduce.MaterializedReducingBarrierStep;
 
 import java.util.Iterator;
 import java.util.Optional;

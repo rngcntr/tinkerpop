@@ -92,27 +92,27 @@ public class MaterializedLocalFilterStep<S> extends MaterializedSubStep<S,S> {
 
     @Override
     public void vertexChanged(Delta<Vertex> delta) {
-        stepIterator(localSteps, delta.getChange()).forEachRemaining(s -> s.vertexChanged(delta));
+        stepIterator(localSteps).forEachRemaining(s -> s.vertexChanged(delta));
     }
 
     @Override
     public void edgeChanged(Delta<Edge> delta) {
-        stepIterator(localSteps, delta.getChange()).forEachRemaining(s -> s.edgeChanged(delta));
+        stepIterator(localSteps).forEachRemaining(s -> s.edgeChanged(delta));
     }
 
     @Override
     public void vertexPropertyChanged(Delta<VertexProperty<?>> delta) {
-        stepIterator(localSteps, delta.getChange()).forEachRemaining(s -> s.vertexPropertyChanged(delta));
+        stepIterator(localSteps).forEachRemaining(s -> s.vertexPropertyChanged(delta));
     }
 
     @Override
     public void edgePropertyChanged(Delta<Property<?>> delta) {
-        stepIterator(localSteps, delta.getChange()).forEachRemaining(s -> s.edgePropertyChanged(delta));
+        stepIterator(localSteps).forEachRemaining(s -> s.edgePropertyChanged(delta));
     }
 
     @Override
     public void vertexPropertyPropertyChanged(Delta<Property<?>> delta) {
-        stepIterator(localSteps, delta.getChange()).forEachRemaining(s -> s.vertexPropertyPropertyChanged(delta));
+        stepIterator(localSteps).forEachRemaining(s -> s.vertexPropertyPropertyChanged(delta));
     }
 
     @Override

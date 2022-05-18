@@ -69,20 +69,20 @@ public class MaterializedView<S,E> extends AbstractMaterializedView<S,E> {
 
     @Override
     public void vertexAdded(Vertex vertex) {
-        stepIterator(materializedSteps, Delta.Change.ADD).forEachRemaining(step -> step.vertexChanged(Delta.add(vertex)));
+        stepIterator(materializedSteps).forEachRemaining(step -> step.vertexChanged(Delta.add(vertex)));
     }
 
     @Override
     public void vertexRemoved(Vertex vertex) {
         graph.vertices(vertex).forEachRemaining(v -> v.properties().forEachRemaining(this::vertexPropertyRemoved));
         graph.vertices(vertex).forEachRemaining(v -> v.edges(Direction.BOTH).forEachRemaining(this::edgeRemoved));
-        stepIterator(materializedSteps, Delta.Change.DEL).forEachRemaining(step -> step.vertexChanged(Delta.del(vertex)));
+        stepIterator(materializedSteps).forEachRemaining(step -> step.vertexChanged(Delta.del(vertex)));
     }
 
 
     @Override
     public void vertexPropertyAdded(VertexProperty<?> vertexProperty) {
-        stepIterator(materializedSteps, Delta.Change.ADD).forEachRemaining(step -> step.vertexPropertyChanged(Delta.add(vertexProperty)));
+        stepIterator(materializedSteps).forEachRemaining(step -> step.vertexPropertyChanged(Delta.add(vertexProperty)));
     }
 
     @Override
@@ -90,37 +90,37 @@ public class MaterializedView<S,E> extends AbstractMaterializedView<S,E> {
         graph.vertices(vertexProperty.element()).forEachRemaining(v ->
                 v.properties(vertexProperty.key()).forEachRemaining(vp ->
                         vp.properties().forEachRemaining(this::vertexPropertyPropertyRemoved)));
-        stepIterator(materializedSteps, Delta.Change.DEL).forEachRemaining(step -> step.vertexPropertyChanged(Delta.del(vertexProperty)));
+        stepIterator(materializedSteps).forEachRemaining(step -> step.vertexPropertyChanged(Delta.del(vertexProperty)));
     }
 
     @Override
     public void edgeAdded(Edge edge) {
-        stepIterator(materializedSteps, Delta.Change.ADD).forEachRemaining(step -> step.edgeChanged(Delta.add(edge)));
+        stepIterator(materializedSteps).forEachRemaining(step -> step.edgeChanged(Delta.add(edge)));
     }
 
     @Override
     public void edgeRemoved(Edge edge) {
         graph.edges(edge).forEachRemaining(e -> e.properties().forEachRemaining(this::edgePropertyRemoved));
-        stepIterator(materializedSteps, Delta.Change.DEL).forEachRemaining(step -> step.edgeChanged(Delta.del(edge)));
+        stepIterator(materializedSteps).forEachRemaining(step -> step.edgeChanged(Delta.del(edge)));
     }
 
     @Override
     public void edgePropertyAdded(Property<?> edgeProperty) {
-        stepIterator(materializedSteps, Delta.Change.ADD).forEachRemaining(step -> step.edgePropertyChanged(Delta.add(edgeProperty)));
+        stepIterator(materializedSteps).forEachRemaining(step -> step.edgePropertyChanged(Delta.add(edgeProperty)));
     }
 
     @Override
     public void edgePropertyRemoved(Property<?> edgeProperty) {
-        stepIterator(materializedSteps, Delta.Change.DEL).forEachRemaining(step -> step.edgePropertyChanged(Delta.del(edgeProperty)));
+        stepIterator(materializedSteps).forEachRemaining(step -> step.edgePropertyChanged(Delta.del(edgeProperty)));
     }
 
     @Override
     public void vertexPropertyPropertyAdded(Property<?> vertexPropertyProperty) {
-        stepIterator(materializedSteps, Delta.Change.ADD).forEachRemaining(step -> step.vertexPropertyPropertyChanged(Delta.add(vertexPropertyProperty)));
+        stepIterator(materializedSteps).forEachRemaining(step -> step.vertexPropertyPropertyChanged(Delta.add(vertexPropertyProperty)));
     }
 
     @Override
     public void vertexPropertyPropertyRemoved(Property<?> vertexPropertyProperty) {
-        stepIterator(materializedSteps, Delta.Change.DEL).forEachRemaining(step -> step.vertexPropertyPropertyChanged(Delta.del(vertexPropertyProperty)));
+        stepIterator(materializedSteps).forEachRemaining(step -> step.vertexPropertyPropertyChanged(Delta.del(vertexPropertyProperty)));
     }
 }

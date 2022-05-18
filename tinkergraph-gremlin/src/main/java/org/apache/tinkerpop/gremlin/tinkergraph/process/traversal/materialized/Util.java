@@ -84,13 +84,8 @@ public class Util {
         return reduce(iterable, Util::min);
     }
 
-    public static <E> Iterator<E> stepIterator(List<E> list, Delta.Change change) {
+    public static <E> Iterator<E> stepIterator(List<E> list) {
         return new ReverseListIterator(list);
-        /*
-        return change == Delta.Change.ADD
-                ? list.iterator()
-                : new ReverseListIterator(list);
-         */
     }
 
     public static Graph getGraph(Step<?,?> step) {

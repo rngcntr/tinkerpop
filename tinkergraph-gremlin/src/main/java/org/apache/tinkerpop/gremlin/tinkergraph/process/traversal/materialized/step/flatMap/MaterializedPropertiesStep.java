@@ -55,12 +55,11 @@ public class MaterializedPropertiesStep<E> extends MaterializedSubStep<Element,E
      * According to <code>change</code> either adds or removes the
      * <code>clonedStep</code>'s outputs which match <code>element</code>
      */
-    private void processSingleClonedStep(Delta<? extends Property<?>> delta) {
+    private void processSingleClonedStep(Element start, Delta<? extends Property<?>> delta) {
         while (clonedStep.hasNext()) {
             Traverser.Admin<E> tOut = clonedStep.next();
             tOut.detach();
-            if (((Property<?>) tOut.get()).element().id() == delta.getObj().element().id()
-                    && tOut.get().equals(delta.getObj())) {
+            if (start.id() == delta.getObj().element().id() && tOut.get().equals(delta.getObj())) {
                 deltaOutput(delta.map(ignored -> tOut));
             }
         }
@@ -71,7 +70,7 @@ public class MaterializedPropertiesStep<E> extends MaterializedSubStep<Element,E
         previousStep.outputs().forEachRemaining(t -> {
             t.attach(Attachable.Method.get(graph));
             clonedStep.addStart(t);
-            processSingleClonedStep(delta);
+            processSingleClonedStep(t.get(), delta);
             t.detach();
         });
         clonedStep.reset();
