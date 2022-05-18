@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.step.util;
+package org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.step;
 
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traverser;
@@ -35,6 +35,7 @@ import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.s
 import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.step.local.MaterializedLocalFilterStep;
 import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.step.map.StatelessMaterializedMapStep;
 import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.step.reduce.*;
+import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.step.util.FakeEmptyStep;
 
 import java.util.*;
 import java.util.function.Consumer;

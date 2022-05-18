@@ -85,9 +85,12 @@ public class Util {
     }
 
     public static <E> Iterator<E> stepIterator(List<E> list, Delta.Change change) {
+        return new ReverseListIterator(list);
+        /*
         return change == Delta.Change.ADD
-                ? new ReverseListIterator(list)
-                : list.iterator();
+                ? list.iterator()
+                : new ReverseListIterator(list);
+         */
     }
 
     public static Graph getGraph(Step<?,?> step) {

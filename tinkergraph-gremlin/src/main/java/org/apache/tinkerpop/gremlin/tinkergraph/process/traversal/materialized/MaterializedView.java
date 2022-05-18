@@ -23,7 +23,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.EmptyStep;
 import org.apache.tinkerpop.gremlin.process.traversal.traverser.TraverserRequirement;
 import org.apache.tinkerpop.gremlin.structure.*;
-import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.step.util.MaterializedSubStep;
+import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.step.MaterializedSubStep;
 import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.step.util.TraverserRequirementStep;
 
 import java.util.ArrayList;

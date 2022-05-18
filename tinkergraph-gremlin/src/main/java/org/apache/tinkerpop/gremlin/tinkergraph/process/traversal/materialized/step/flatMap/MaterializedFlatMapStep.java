@@ -26,7 +26,7 @@ import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.util.Attachable;
 import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.AbstractMaterializedView;
 import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.Delta;
-import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.step.util.MaterializedSubStep;
+import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.step.MaterializedSubStep;
 
 public abstract class MaterializedFlatMapStep<S, E extends Element> extends MaterializedSubStep<S,E> {
 
@@ -51,6 +51,7 @@ public abstract class MaterializedFlatMapStep<S, E extends Element> extends Mate
 
     protected void processAllClonedStep(Delta<? extends Element> delta) {
         previousStep.outputs().forEachRemaining(t -> {
+            if (t.get().equals(delta.getObj())) return; // these will be cleaned up by subsequent InputDelta
             t.attach(Attachable.Method.get(graph));
             clonedStep.addStart(t);
             processSingleClonedStep(delta);

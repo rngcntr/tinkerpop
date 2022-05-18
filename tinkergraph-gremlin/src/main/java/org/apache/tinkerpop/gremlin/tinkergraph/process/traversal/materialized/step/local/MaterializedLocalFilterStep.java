@@ -34,7 +34,7 @@ import org.apache.tinkerpop.gremlin.structure.VertexProperty;
 import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.AbstractMaterializedView;
 import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.Delta;
 import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.HashMultiSet;
-import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.step.util.MaterializedSubStep;
+import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.step.MaterializedSubStep;
 
 import java.util.*;
 

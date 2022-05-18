@@ -22,7 +22,6 @@ import org.apache.tinkerpop.gremlin.process.traversal.Traverser;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.SumGlobalStep;
 import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.AbstractMaterializedView;
 import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.Delta;
-import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.materialized.step.reduce.MaterializedReducingBarrierStep;
 import org.apache.tinkerpop.gremlin.util.NumberHelper;
 
 import java.util.Optional;
@@ -35,7 +34,7 @@ public class MaterializedSumStep<T extends Number> extends MaterializedReducingB
 
     @Override
     protected Optional<T> getSeed() {
-        return Optional.of((T) Byte.valueOf((byte) 0));
+        return Optional.empty();
     }
 
     @Override
@@ -50,6 +49,6 @@ public class MaterializedSumStep<T extends Number> extends MaterializedReducingB
         }
         Number changeValue = NumberHelper.mul(inputChange.getObj().get(), inputChange.getObj().bulk());
         Number signedChangeValue = NumberHelper.mul(changeValue, inputChange.isAddition() ? 1 : -1);
-        return (state.isPresent() ? state : getSeed()).map(s -> (T) NumberHelper.add(s, signedChangeValue));
+        return (state.isPresent() ? state : Optional.of((T) Byte.valueOf((byte) 0))).map(s -> (T) NumberHelper.add(s, signedChangeValue));
     }
 }

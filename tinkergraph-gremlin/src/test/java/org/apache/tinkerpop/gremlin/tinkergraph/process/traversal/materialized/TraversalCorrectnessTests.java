@@ -219,6 +219,11 @@ public class TraversalCorrectnessTests {
     }
 
     @Test
+    public void V_Age_Value_Count() {
+        testTraversal(g -> g.V().properties("age").value().count());
+    }
+
+    @Test
     public void V_Age_Value_Min() {
         testTraversal(g -> g.V().properties("age").value().min());
     }
@@ -370,6 +375,7 @@ public class TraversalCorrectnessTests {
         g.V(peter).drop().iterate(); tests.run();
         peter = g.addV("person").property("name", "peter").property("age", 35).next(); tests.run();
 
+        Edge joshKnowsJosh = g.addE("knows").from(josh).to(josh).property("weight", 1.0).next(); tests.run();
         Edge markoKnowsVadas = g.addE("knows").from(marko).to(vadas).property("weight", 0.5).next(); tests.run();
         Edge markoKnowsJosh = g.addE("knows").from(marko).to(josh).property("weight", 1.0).next(); tests.run();
         Edge markoCreatedLop = g.addE("created").from(marko).to(lop).property("weight", 0.4).next(); tests.run();
@@ -377,6 +383,7 @@ public class TraversalCorrectnessTests {
         Edge joshCreatedLop = g.addE("created").from(josh).to(lop).property("weight", 0.4).next(); tests.run();
         Edge joshCreatedRipple = g.addE("created").from(josh).to(ripple).property("weight", 1.0).next(); tests.run();
         g.E(joshCreatedRipple).drop().iterate(); tests.run();
+        g.E(joshKnowsJosh).drop().iterate(); tests.run();
         joshCreatedRipple = g.addE("created").from(josh).to(ripple).property("weight", 1.0).next(); tests.run();
 
         g.V(vadas).drop().iterate(); tests.run();
