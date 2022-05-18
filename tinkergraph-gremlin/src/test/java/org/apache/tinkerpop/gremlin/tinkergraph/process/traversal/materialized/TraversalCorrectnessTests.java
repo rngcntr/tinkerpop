@@ -254,6 +254,11 @@ public class TraversalCorrectnessTests {
     }
 
     @Test
+    public void V_WhereOutE() {
+        testTraversal(g -> g.V().where(__.identity().outE()));
+    }
+
+    @Test
     public void V_NotIdentity() {
         testTraversal(g -> g.V().not(__.identity()));
     }
@@ -264,6 +269,56 @@ public class TraversalCorrectnessTests {
     }
 
     @Test
+    public void V_WhereWhereIdentity() {
+        testTraversal(g -> g.V().where(__.identity().where(__.identity())));
+    }
+
+    @Test
+    public void V_WhereWhereNone() {
+        testTraversal(g -> g.V().where(__.identity().where(__.identity().none())));
+    }
+
+    @Test
+    public void V_NotNotIdentity() {
+        testTraversal(g -> g.V().not(__.identity().not(__.identity())));
+    }
+
+    @Test
+    public void V_NotNotNone() {
+        testTraversal(g -> g.V().not(__.identity().not(__.identity().none())));
+    }
+
+    @Test
+    public void V_WhereNotIdentity() {
+        testTraversal(g -> g.V().where(__.identity().not(__.identity())));
+    }
+
+    @Test
+    public void V_WhereNotNone() {
+        testTraversal(g -> g.V().where(__.identity().not(__.identity().none())));
+    }
+
+    @Test
+    public void V_NotWhereIdentity() {
+        testTraversal(g -> g.V().not(__.identity().where(__.identity())));
+    }
+
+    @Test
+    public void V_NotWhereNone() {
+        testTraversal(g -> g.V().not(__.identity().where(__.identity().none())));
+    }
+
+    @Test
+    public void V_NotOutE() {
+        testTraversal(g -> g.V().not(__.identity().outE()));
+    }
+
+    @Test
+    public void V_as_out_in_WhereEquals() {
+        testTraversal(g -> g.V().as("first").out().in().as("second").where("first", P.eq("second")));
+    }
+
+    @Test
     public void V_WhereHasKeyValue() {
         testTraversal(g -> g.V().where(__.identity().has("name", "josh")));
     }
@@ -271,6 +326,16 @@ public class TraversalCorrectnessTests {
     @Test
     public void V_NotHasKeyValue() {
         testTraversal(g -> g.V().not(__.identity().has("name", "josh")));
+    }
+
+    @Test
+    public void V_WhereNotHasKeyValue() {
+        testTraversal(g -> g.V().where(__.identity().not(__.identity().has("name", "josh"))));
+    }
+
+    @Test
+    public void V_NotWhereHasKeyValue() {
+        testTraversal(g -> g.V().not(__.identity().where(__.identity().has("name", "josh"))));
     }
 
     private void testTraversal(Function<GraphTraversalSource, GraphTraversal<?, ?>> ts) {
