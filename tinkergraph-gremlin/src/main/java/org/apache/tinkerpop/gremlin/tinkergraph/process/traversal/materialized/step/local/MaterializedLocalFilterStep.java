@@ -26,6 +26,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.step.filter.FilterStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.NotStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.TraversalFilterStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.EmptyStep;
+import org.apache.tinkerpop.gremlin.process.traversal.util.DefaultTraversalSideEffects;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Property;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
@@ -121,6 +122,7 @@ public class MaterializedLocalFilterStep<S> extends MaterializedSubStep<S,S> {
             /*
                 for not(...) traversals, the result is added to the set by default and gets removed by
                 the registerLocalDelta method
+                TODO: Not yet determined if this works with multiple deletions and additions
             */
             if (inputChange.isAddition()) {
                 localResultSet.add(original);
@@ -140,6 +142,10 @@ public class MaterializedLocalFilterStep<S> extends MaterializedSubStep<S,S> {
         Traverser.Admin<S> original = inputChange.getObj();
         Traverser.Admin<S> clone = (Traverser.Admin<S>) original.clone();
         localStartStep.registerInputDelta(inputChange.map(t -> {
+            DefaultTraversalSideEffects se = new DefaultTraversalSideEffects();
+            // TODO: Merging into null is not safe, but ensures that traverser objects can 'equal' each other
+            se.setSack(() -> original, sAdmin -> sAdmin, (sAdmin, sAdmin2) -> null);
+            clone.setSideEffects(se);
             clone.sack(original);
             return clone;
         }));
@@ -148,20 +154,20 @@ public class MaterializedLocalFilterStep<S> extends MaterializedSubStep<S,S> {
     public <T> void registerLocalDelta(Delta<Traverser.Admin<T>> inputChange) {
         Traverser.Admin<S> sack = inputChange.getObj().sack();
 
-        if (inverseFilter) {
-            if (inputChange.isAddition() && localResultSet.contains(sack)) {
-                localResultSet.remove(sack);
-                deltaOutput(inputChange.invert().map(t -> sack));
-            } else if (inputChange.isDeletion() && !localResultSet.contains(sack)) {
-                localResultSet.add(sack);
-                deltaOutput(inputChange.invert().map(t -> sack));
-            }
+        boolean foundBefore = localResultSet.contains(sack);
+
+        if (inverseFilter && inputChange.isDeletion() || !inverseFilter && inputChange.isAddition()) {
+            localResultSet.add(sack);
         } else {
-            if (inputChange.isAddition() && !localResultSet.contains(sack)) {
-                localResultSet.add(sack);
-                deltaOutput(inputChange.map(t -> sack));
-            } else if (inputChange.isDeletion() && localResultSet.contains(sack)) {
-                localResultSet.remove(sack);
+            localResultSet.remove(sack);
+        }
+
+        boolean foundAfter = localResultSet.contains(sack);
+
+        if (foundBefore != foundAfter) {
+            if (inverseFilter) {
+                deltaOutput(inputChange.invert().map(t -> sack));
+            } else {
                 deltaOutput(inputChange.map(t -> sack));
             }
         }
